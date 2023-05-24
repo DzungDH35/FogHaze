@@ -3,24 +3,23 @@ import cv2 as cv
 import numpy as np
 
 
-class BaseDepthMapEstimator(ABC):
-    _base_images = [] # (np.ndarray[]) - list of base images which are RGB (expected)
+class BaseFogHazeGenerator(ABC):
+    _original_images = [] # (np.ndarray[]) - list of original image which is RGB (expected)
 
 
     # @param (mixture of np.ndarray and str) images
     def __init__(self, images):
-        self.base_images = images
-        
+        self.original_images = images
 
-    # @return np.ndarray[]
+
+    # @return np.ndarray
     @property
-    def base_images(self):
-        return self._base_images
-    
+    def original_images(self):
+        return self._original_images
 
-    # @param (mixture of np.ndarray and str) images - expect images as numpy array or image file path
-    @base_images.setter
-    def base_images(self, images):
+
+    @original_images.setter
+    def original_images(self, images):
         if not isinstance(images, list):
             raise TypeError('Expected a list of images!')
 
@@ -38,10 +37,10 @@ class BaseDepthMapEstimator(ABC):
             elif not img_type is np.ndarray:
                 raise TypeError('Not a valid image (numpy array) or string of file path!')
         
-        self._base_images = images
+        self._original_images = images
 
-
+    
     # @return np.ndarray[]
     @abstractmethod
-    def estimate_depth_maps(self):
+    def generate_foghaze_images(self):
         pass
