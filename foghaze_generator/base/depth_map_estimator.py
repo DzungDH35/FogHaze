@@ -3,12 +3,16 @@ import cv2 as cv
 import numpy as np
 
 
+"""
+@class A base class for depth map estimator which estimates (predicts) depth map from scene.
+This estimator accepts multiple images as input and produces depth maps as output.
+"""
 class BaseDepthMapEstimator(ABC):
     _base_images = [] # (np.ndarray[]) - list of base images which are RGB (expected)
 
 
     # @param (mixture of np.ndarray and str) images
-    def __init__(self, images):
+    def __init__(self, images=[]):
         self.base_images = images
         
 

@@ -12,6 +12,9 @@ _midas_model_type = 'MiDaS_small'  # MiDaS v2.1 - Small   (lowest accuracy, high
 VALID_MIDAS_MODEL_TYPE = ['DPT_Large', 'DPT_Hybrid', 'MiDaS_small']
 
 
+"""
+@class An implementation of depth map estimator which is, specifically, a Midas model.
+"""
 class MidasDmapEstimator(BaseDepthMapEstimator):
     _midas = None
     _transform = None

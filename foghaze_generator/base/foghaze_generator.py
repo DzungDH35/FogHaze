@@ -3,12 +3,16 @@ import cv2 as cv
 import numpy as np
 
 
+"""
+@class A base class for fog-haze generator which accepts multiple images as input
+and produces corresponding foggy-hazy images as output.
+"""
 class BaseFogHazeGenerator(ABC):
     _original_images = [] # (np.ndarray[]) - list of original image which is RGB (expected)
 
 
-    # @param (mixture of np.ndarray and str) images
-    def __init__(self, images):
+    # @param (mixture of np.ndarray or str) images
+    def __init__(self, images=[]):
         self.original_images = images
 
 
@@ -18,6 +22,7 @@ class BaseFogHazeGenerator(ABC):
         return self._original_images
 
 
+    # @param (mixture of np.ndarray or str) images - original images which can be numpy array (expected to be RGB) or file path
     @original_images.setter
     def original_images(self, images):
         if not isinstance(images, list):
