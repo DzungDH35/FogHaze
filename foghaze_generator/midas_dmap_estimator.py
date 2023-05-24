@@ -1,4 +1,4 @@
-from base.depth_map_estimator import BaseDepthMapEstimator
+from .base.depth_map_estimator import BaseDepthMapEstimator
 import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy as np
@@ -23,7 +23,7 @@ class MidasDmapEstimator(BaseDepthMapEstimator):
 
     # @param (mixture of np.ndarray and str) images
     # @param (str) midas_model_type
-    def __init__(self, images, midas_model_type='DPT_Large'):
+    def __init__(self, images=[], midas_model_type='DPT_Large'):
         super().__init__(images)
 
         if midas_model_type not in VALID_MIDAS_MODEL_TYPE:

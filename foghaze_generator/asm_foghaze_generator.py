@@ -1,5 +1,5 @@
-from base.depth_map_estimator import BaseDepthMapEstimator
-from base.foghaze_generator import BaseFogHazeGenerator
+from .base.depth_map_estimator import BaseDepthMapEstimator
+from .base.foghaze_generator import BaseFogHazeGenerator
 import numpy as np
 
 
@@ -45,7 +45,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
 
         self._depth_map_estimator.base_images = [original_img]
         depth_map = self._depth_map_estimator.estimate_depth_maps()
-        depth_map_3c = np.zeros_like(self._original_img)
+        depth_map_3c = np.zeros_like(original_img)
         depth_map_3c[:, :, 0] = depth_map
         depth_map_3c[:, :, 1] = depth_map
         depth_map_3c[:, :, 2] = depth_map
