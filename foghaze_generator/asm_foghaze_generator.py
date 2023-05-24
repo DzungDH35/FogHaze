@@ -44,7 +44,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         scattering_coef = 0.95
 
         self._depth_map_estimator.base_images = [original_img]
-        depth_map = self._depth_map_estimator.estimate_depth_maps()
+        depth_map = self._depth_map_estimator.estimate_depth_maps()[0]
         depth_map_3c = np.zeros_like(original_img)
         depth_map_3c[:, :, 0] = depth_map
         depth_map_3c[:, :, 1] = depth_map
