@@ -45,6 +45,20 @@ class BaseDepthMapEstimator(ABC):
         self._rgb_images = images
 
 
+    """
+    @param (np.ndarray) dmap - depth map
+    @param (bool) inverse - a depth map can have two ways of representation.
+    First, the closer a pixel is, the smaller its value, and the farther it is, the larger its value.
+    Second,the closer a pixel is, the larger its value, the farther it is, the smaller its value.
+    Set inverse = True will switch back and forth.
+
+    @return np.ndarray
+    """
+    @abstractmethod
+    def normalize_depth_map(dmap, inverse=False):
+        pass
+
+
     # @return (np.ndarray[]) - list of grayscale depth maps
     @abstractmethod
     def estimate_depth_maps(self):
