@@ -22,10 +22,10 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
     
 
     """
-    @param (mixture of np.ndarray or str) images
     @param (BaseDepthMapEstimator) dmap_estimator
+    @param (mixture of np.ndarray or str) images
     """
-    def __init__(self, images, dmap_estimator):
+    def __init__(self, dmap_estimator, images=[]):
         super().__init__(images)
 
         if not isinstance(dmap_estimator, BaseDepthMapEstimator):
