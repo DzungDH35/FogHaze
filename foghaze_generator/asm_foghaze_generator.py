@@ -1,6 +1,7 @@
 from .base.depth_map_estimator import BaseDepthMapEstimator
 from .base.foghaze_generator import BaseFogHazeGenerator
 import numpy as np
+import cv2 as cv
 
 
 """
@@ -46,13 +47,10 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         self._depth_map_estimator.rgb_images = [original_img]
         depth_map = self._depth_map_estimator.estimate_depth_maps()[0]
         normalized_dmap = self._depth_map_estimator.normalize_depth_map(depth_map, True)
-
-        depth_map_3c = np.zeros_like(original_img)
-        depth_map_3c[:, :, 0] = normalized_dmap
-        depth_map_3c[:, :, 1] = normalized_dmap
-        depth_map_3c[:, :, 2] = normalized_dmap
+        normalized_dmap = cv.cvtColor(normalized_dmap, cv.COLOR_GRAY2RGB)
+        normalized_dmap = normalized_dmap / 255
         
-        transmission_map = np.exp(-scattering_coef * depth_map_3c)
+        transmission_map = np.exp(-scattering_coef * normalized_dmap)
 
         foghaze_img = original_img * transmission_map + atm_light * (1 - transmission_map)
         foghaze_img = np.array(foghaze_img, dtype=np.uint8)

@@ -67,7 +67,8 @@ def estimate_depth_map(img, write_to_file=False):
     return normalized_dmap
 
 
-dmap = estimate_depth_map('test_img.jpg', True)
-print_img_info(dmap, True)
-plt.imshow(dmap)
-plt.show()
+if __name__ == "__main__":
+    dmap = estimate_depth_map('test_img.jpg', True)
+    print_img_info(dmap, True)
+    plt.imshow(dmap)
+    plt.show()
