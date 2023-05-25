@@ -28,11 +28,8 @@ def print_img_info(img, print_img=False):
         f'Max value: {np.amax(img)}',
         sep='\n')
     
-    print(f'Image shape: {img.shape}')
-    
     if print_img:
         print(img)
-
     print()
 
 
@@ -44,12 +41,16 @@ def print_img_info(img, print_img=False):
 def estimate_depth_map(img, write_to_file=False):
     dmap_estimator = MidasDmapEstimator([img])
     dmap = dmap_estimator.estimate_depth_maps()[0]
-    normalized_dmap = cv.normalize(dmap, None, 0, 255, cv.NORM_MINMAX, cv.CV_8U)
-    bgr_dmap = cv.cvtColor(normalized_dmap, cv.COLOR_GRAY2BGR)
+    # normalized_dmap = cv.normalize(dmap, None, 0, 255, cv.NORM_MINMAX, cv.CV_8U)
+    # bgr_dmap = cv.cvtColor(normalized_dmap, cv.COLOR_GRAY2BGR)
 
     if write_to_file:
         if os.path.exists('debug_dmap.jpg'):
             os.remove('debug_dmap.jpg')
-        cv.imwrite('debug_dmap.jpg', bgr_dmap)
+        plt.imsave('debug_dmap.jpg', dmap)
 
-    return bgr_dmap
+    return dmap
+
+
+dmap = estimate_depth_map('test_img.jpg', True)
+print_img_info(dmap)
