@@ -55,7 +55,7 @@ class BaseDepthMapEstimator(ABC):
     @return np.ndarray
     """
     @abstractmethod
-    def normalize_depth_map(dmap, inverse=False):
+    def normalize_depth_map(self, dmap, inverse=False):
         pass
 
 

@@ -56,7 +56,7 @@ class MidasDmapEstimator(BaseDepthMapEstimator):
 
     @return np.ndarray
     """
-    def normalize_depth_map(dmap, inverse=False):
+    def normalize_depth_map(self, dmap, inverse=False):
         normalized_dmap = cv.normalize(dmap, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
 
         if inverse:
