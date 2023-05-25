@@ -46,6 +46,26 @@ class MidasDmapEstimator(BaseDepthMapEstimator):
 
 
     """
+    Normalize depth map to unit8 by using opencv normalize, and provide an option of 'inverse'.
+
+    @param (np.ndarray) dmap - depth map
+    @param (bool) inverse - a depth map can have two ways of representation.
+    First, the closer a pixel is, the smaller its value, and the farther it is, the larger its value.
+    Second,the closer a pixel is, the larger its value, the farther it is, the smaller its value. 
+    Set inverse = True will switch back and forth.
+
+    @return np.ndarray
+    """
+    def normalize_depth_map(dmap, inverse=False):
+        normalized_dmap = cv.normalize(dmap, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
+
+        if inverse:
+            normalized_dmap = 255 - normalized_dmap
+        
+        return normalized_dmap.astype(np.uint8)
+
+
+    """
     @return (np.ndarray[]) - list of depth maps estimated by Midas are grayscale images and have type of float32
     """
     def estimate_depth_maps(self):
