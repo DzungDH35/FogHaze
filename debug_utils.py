@@ -34,12 +34,12 @@ def print_img_info(img, print_img=False):
 
 
 def normalize_depth_map(dmap, inverse=False):
-        normalized_dmap = cv.normalize(dmap, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
+    normalized_dmap = cv.normalize(dmap, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
 
-        if inverse:
-            normalized_dmap = 255 - normalized_dmap
-        
-        return normalized_dmap.astype(np.uint8)
+    if inverse:
+        normalized_dmap = 255 - normalized_dmap
+    
+    return normalized_dmap.astype(np.uint8)
 
 
 """
@@ -53,12 +53,21 @@ def estimate_depth_map(img, write_to_file=False):
     normalized_dmap = normalize_depth_map(dmap, False)
 
     if write_to_file:
-        if os.path.exists('debug_dmap.jpg'):
-            os.remove('debug_dmap.jpg')
+        if os.path.exists('debug_dmap_grey.jpg'):
+            os.remove('debug_dmap_grey.jpg')
         if os.path.exists('debug_dmap_magma.jpg'):
             os.remove('debug_dmap_magma.jpg')
+        if os.path.exists('debug_dmap_viridis.jpg'):
+            os.remove('debug_dmap_viridis.jpg')
 
-        cv.imwrite('debug_dmap.jpg', cv.cvtColor(normalized_dmap, cv.COLOR_GRAY2BGR))
+        cv.imwrite('debug_dmap_grey.jpg', cv.cvtColor(normalized_dmap, cv.COLOR_GRAY2BGR))
+        plt.imsave('debug_dmap_viridis.jpg', normalized_dmap, cmap='viridis')
         plt.imsave('debug_dmap_magma.jpg', normalized_dmap, cmap='magma')
 
     return normalized_dmap
+
+
+dmap = estimate_depth_map('test_img.jpg', True)
+print_img_info(dmap, True)
+plt.imshow(dmap)
+plt.show()

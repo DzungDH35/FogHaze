@@ -32,10 +32,11 @@ class BaseDepthMapEstimator(ABC):
             img_type = type(img)
             
             if img_type is str:
+                file_path = img
                 img = cv.imread(img)
 
                 if img is None:
-                    print(f'Cannot read an image file path {img}!')
+                    print(f'Cannot read an image file path {file_path}!')
                     images.pop(i)
                 else:
                     images[i] = cv.cvtColor(img, cv.COLOR_BGR2RGB)
