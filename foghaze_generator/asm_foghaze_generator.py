@@ -43,7 +43,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         atm_light = 255
         scattering_coef = 0.95
 
-        self._depth_map_estimator.base_images = [original_img]
+        self._depth_map_estimator.rgb_images = [original_img]
         depth_map = self._depth_map_estimator.estimate_depth_maps()[0]
         depth_map_3c = np.zeros_like(original_img)
         depth_map_3c[:, :, 0] = depth_map
@@ -63,11 +63,11 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
     def generate_foghaze_images(self):
         foghaze_images = []
 
-        if len(self._original_images) == 0:
+        if len(self._rgb_images) == 0:
             print('There exists no input images!')
             return []
 
-        for img in self._original_images:
+        for img in self._rgb_images:
             foghaze_images.append(self._generate_foghaze_image(img))
         
         return foghaze_images

@@ -45,17 +45,21 @@ class MidasDmapEstimator(BaseDepthMapEstimator):
             self._transform = midas_transforms.small_transform
 
 
-    # @return np.ndarray[]
+    # @return (np.ndarray[]) - list of depth maps estimated by Midas
+    # has
+    """
+    @return (np.ndarray[]) - list of depth maps estimated by Midas are grayscale images and have type of float32
+    """
     def estimate_depth_maps(self):
         depth_maps = []
 
-        if len(self._base_images) == 0:
+        if len(self._rgb_images) == 0:
             print('No base images to estimate from!')
             return []
         
         # Preprocessing - Load image and apply transforms
         input_batches = []
-        for img in self._base_images:
+        for img in self._rgb_images:
             input_batches.append(self._transform(img).to(self._device))
         
         # Predict and resize to original resolution
@@ -66,7 +70,7 @@ class MidasDmapEstimator(BaseDepthMapEstimator):
 
                 prediction = torch.nn.functional.interpolate(
                     prediction.unsqueeze(1),
-                    size=self._base_images[i].shape[:2],
+                    size=self._rgb_images[i].shape[:2],
                     mode="bicubic",
                     align_corners=False,
                 ).squeeze()

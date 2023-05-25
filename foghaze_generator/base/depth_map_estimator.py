@@ -5,26 +5,26 @@ import numpy as np
 
 """
 @class A base class for depth map estimator which estimates (predicts) depth map from scene.
-This estimator accepts multiple images as input and produces depth maps as output.
+This estimator accepts multiple images (expected to be RGB) as input and produces depth maps (expected to be grayscale) as output.
 """
 class BaseDepthMapEstimator(ABC):
-    _base_images = [] # (np.ndarray[]) - list of base images which are RGB (expected)
+    _rgb_images = [] # (np.ndarray[]) - list of RGB images
 
 
     # @param (mixture of np.ndarray and str) images
     def __init__(self, images=[]):
-        self.base_images = images
+        self.rgb_images = images
         
 
     # @return np.ndarray[]
     @property
-    def base_images(self):
-        return self._base_images
+    def rgb_images(self):
+        return self._rgb_images
     
 
     # @param (mixture of np.ndarray and str) images - expect images as numpy array or image file path
-    @base_images.setter
-    def base_images(self, images):
+    @rgb_images.setter
+    def rgb_images(self, images):
         if not isinstance(images, list):
             raise TypeError('Expected a list of images!')
 
@@ -42,10 +42,10 @@ class BaseDepthMapEstimator(ABC):
             elif not img_type is np.ndarray:
                 raise TypeError('Not a valid image (numpy array) or string of file path!')
         
-        self._base_images = images
+        self._rgb_images = images
 
 
-    # @return np.ndarray[]
+    # @return (np.ndarray[]) - list of grayscale depth maps
     @abstractmethod
     def estimate_depth_maps(self):
         pass
