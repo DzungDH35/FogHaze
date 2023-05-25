@@ -45,8 +45,6 @@ class MidasDmapEstimator(BaseDepthMapEstimator):
             self._transform = midas_transforms.small_transform
 
 
-    # @return (np.ndarray[]) - list of depth maps estimated by Midas
-    # has
     """
     @return (np.ndarray[]) - list of depth maps estimated by Midas are grayscale images and have type of float32
     """
