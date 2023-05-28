@@ -19,15 +19,17 @@ Atmospheric Scattering Model (ASM):
     d(x): depth map
 """
 class ASMFogHazeGenerator(BaseFogHazeGenerator):
-    _depth_map_estimator: BaseDepthMapEstimator     # an estimator to predict depth map of scene
-    _atm_light: int | np.ndarray[int]               # atmospheric light can be a constant or a pixel-position dependent value
-    _scattering_coef: float | np.ndarray[float]     # scattering coefficient can be a constant or a pixel-position dependent value
-    
+    _depth_map_estimator: BaseDepthMapEstimator = None      # an estimator to predict depth map of scene
+    _atm_lights: list[int | np.ndarray[int]] = []           # list of atmospheric lights, each can be a constant or a pixel-position dependent value
+    _scattering_coefs: list[float | np.ndarray[float]] = [] # list of scattering coefficients, each can be a constant or a pixel-position dependent value
+
 
     def __init__(
         self,
         dmap_estimator: BaseDepthMapEstimator,
-        images: list[np.ndarray | str] = []
+        images: list[np.ndarray | str] = [],
+        atm_lights: list[int | np.ndarray[int]] = [],
+        betas: list[float | np.ndarray[float]] = []
     ):
         super().__init__(images)
 
@@ -35,40 +37,55 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
             raise TypeError('Depth map estimator must be of type BaseDepthMapEstimator!')
         
         self._depth_map_estimator = dmap_estimator
+        self.atm_lights = atm_lights
+        self.scattering_coefs = betas
 
     
     @property
-    def atm_light(self) -> int | np.ndarray[int]:
-        return self._atm_light
+    def atm_lights(self) -> list[int | np.ndarray[int]]:
+        return self._atm_lights
     
 
-    @atm_light.setter
-    def atm_light(self, A: int | np.ndarray[int]):
-        # Because [0 ,255] is the encoding value range of input images, then atmospheric light should also take value in this range.
-        if (type(A) is int and (A < 0 or A > 255)) or (isinstance(A, np.ndarray) and np.any((A < 0) | (A > 255))):
-            raise ValueError('Atmospheric light must be within [0, 255].')
+    @atm_lights.setter
+    def atm_lights(self, atm_lights: list[int | np.ndarray[int]]):
+        for i, A in enumerate(atm_lights):
+            # Because [0 ,255] is the encoding value range of input images, then atmospheric light should also take value in this range.
+            if (type(A) is int and (A < 0 or A > 255)) or (isinstance(A, np.ndarray) and np.any((A < 0) | (A > 255))):
+                raise ValueError(f'Atmospheric light at index {i} must be within [0, 255].')
         
-        self._atm_light = A
+        size_diff = len(self._rgb_images) - len(atm_lights)
+        if size_diff > 0:
+            self._atm_lights = np.append(atm_lights, np.random.randint(0, 256, size=size_diff))
+        else:
+            self._atm_lights = atm_lights
 
     
     @property
-    def scattering_coef(self) -> float | np.ndarray[float]:
-        return self._scattering_coef
+    def scattering_coefs(self) -> list[float | np.ndarray[float]]:
+        return self._scattering_coefs
     
 
-    @scattering_coef.setter
-    def scattering_coef(self, beta: float | np.ndarray[float]):
-        if (type(beta) is float and beta < 0) or (isinstance(beta, np.ndarray) and np.any(beta < 0)):
-            raise ValueError('Scattering coefficient must be larger than 0.')
+    @scattering_coefs.setter
+    def scattering_coefs(self, betas: list[float | np.ndarray[float]]):
+        for i, beta in enumerate(betas):
+            if (type(beta) is float and beta < 0) or (isinstance(beta, np.ndarray) and np.any(beta < 0)):
+                raise ValueError(f'Scattering coefficient at index {i} must be larger than 0.')
 
-        self._scattering_coef = beta
+        size_diff = len(self._rgb_images) - len(betas)
+        if size_diff > 0:
+            self._scattering_coefs = np.append(betas, np.random.random(size=size_diff))
+        else:
+            self._scattering_coefs = betas
 
 
     # @private
-    def _generate_foghaze_image(self, original_img: np.ndarray) -> np.ndarray:
-        atm_light = 255
-        scattering_coef = 0.95
-
+    def _generate_foghaze_image(
+        self,
+        original_img: np.ndarray,
+        atm_light: int | np.ndarray[int],
+        scattering_coef: float | np.ndarray[float]
+    ) -> np.ndarray:
+        
         self._depth_map_estimator.rgb_images = [original_img]
         depth_map = self._depth_map_estimator.estimate_depth_maps()[0]
         normalized_dmap = self._depth_map_estimator.normalize_depth_map(depth_map, True)
@@ -84,13 +101,17 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
 
 
     def generate_foghaze_images(self) -> list[np.ndarray]:
-        foghaze_images = []
+        self.fh_images = []
 
         if len(self._rgb_images) == 0:
             print('There exists no input images!')
             return []
 
-        for img in self._rgb_images:
-            foghaze_images.append(self._generate_foghaze_image(img))
+        for i, img in enumerate(self._rgb_images):
+            self.fh_images.append(self._generate_foghaze_image(
+                img,
+                self._atm_lights[i],
+                self._scattering_coefs[i]
+            ))
         
-        return foghaze_images
+        return self.fh_images
