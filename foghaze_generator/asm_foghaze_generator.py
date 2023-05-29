@@ -51,7 +51,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
     
 
     @depth_maps.setter
-    def _depth_maps(self, dmaps: list[np.ndarray | str]):
+    def depth_maps(self, dmaps: list[np.ndarray | str]):
         for i, dmap in enumerate(dmaps):
             img_type = type(dmap)
             
