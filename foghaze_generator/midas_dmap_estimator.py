@@ -37,23 +37,26 @@ class MidasDmapEstimator(BaseDepthMapEstimator):
 
     # @private
     def _setup_model(self):
-        if self._midas_model_type not in VALID_MIDAS_MODEL_TYPE:
-            raise ValueError('Expect midas_model_type to be "DPT_Large" or "DPT_Hybrid" or "MiDaS_small"!')
-        
-        self._midas = torch.hub.load('intel-isl/MiDaS', self._midas_model_type)
-        
-        # Move model to GPU if available
-        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-        self._device = device
-        self._midas.to(device)
-        self._midas.eval()
+        if self._midas is None and self._transform is None:
+            if self._midas_model_type not in VALID_MIDAS_MODEL_TYPE:
+                raise ValueError('Expect midas_model_type to be "DPT_Large" or "DPT_Hybrid" or "MiDaS_small"!')
+            
+            self._midas = torch.hub.load('intel-isl/MiDaS', self._midas_model_type)
+            
+            # Move model to GPU if available
+            device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+            self._device = device
+            self._midas.to(device)
+            self._midas.eval()
 
-        # Load transforms to resize and normalize the image for large or small model
-        midas_transforms = torch.hub.load('intel-isl/MiDaS', 'transforms')
-        if self._midas_model_type == 'DPT_Large' or self._midas_model_type == 'DPT_Hybrid':
-            self._transform = midas_transforms.dpt_transform
+            # Load transforms to resize and normalize the image for large or small model
+            midas_transforms = torch.hub.load('intel-isl/MiDaS', 'transforms')
+            if self._midas_model_type == 'DPT_Large' or self._midas_model_type == 'DPT_Hybrid':
+                self._transform = midas_transforms.dpt_transform
+            else:
+                self._transform = midas_transforms.small_transform
         else:
-            self._transform = midas_transforms.small_transform
+            print('Model has already been loaded!')
 
 
     """
