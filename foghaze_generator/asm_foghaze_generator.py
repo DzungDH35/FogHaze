@@ -40,6 +40,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
             raise TypeError('Depth map estimator must be of type BaseDepthMapEstimator!')
         
         self._depth_map_estimator = dmap_estimator
+        self.depth_maps = depth_maps
         self.atm_lights = atm_lights
         self.scattering_coefs = betas
     
