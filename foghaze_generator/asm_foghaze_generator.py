@@ -139,7 +139,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
             atm_light = random.randint(0, 255)
         
         if scattering_coef is None:
-            scattering_coef = random.random()
+            scattering_coef = random.uniform(0, 2)
 
         normalized_dmap = (inverse_dmap / np.max(inverse_dmap)).astype(np.float32)  # scale to [0.0 - 1.0]
         normalized_dmap = 1.0 - normalized_dmap     # reverse the inverse depth map
@@ -154,7 +154,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
 
 
     def generate_foghaze_images(self) -> list[np.ndarray]:
-        self._fh_images = []
+        self.fh_images = []
 
         if len(self._rgb_images) == 0:
             print('There exists no input images!')
