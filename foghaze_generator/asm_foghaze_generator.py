@@ -21,7 +21,7 @@ Atmospheric Scattering Model (ASM):
 """
 class ASMFogHazeGenerator(BaseFogHazeGenerator):
     _depth_map_estimator: BaseDepthMapEstimator = None      # an estimator to predict depth map of scene
-    _depth_maps: list[np.ndarray] = []                      # list of inverse relative depth maps which are grayscale images
+    _inverse_dmaps: list[np.ndarray] = []                   # list of inverse relative depth maps which are grayscale images
     _atm_lights: list[int | np.ndarray[int]] = []           # list of atmospheric lights, each can be a constant or a pixel-position dependent value
     _scattering_coefs: list[float | np.ndarray[float]] = [] # list of scattering coefficients, each can be a constant or a pixel-position dependent value
 
@@ -30,7 +30,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         self,
         dmap_estimator: BaseDepthMapEstimator,
         images: list[np.ndarray | str] = [],
-        depth_maps: list[np.ndarray | str] = [],
+        inverse_dmaps: list[np.ndarray | str] = [],
         atm_lights: list[int | np.ndarray[int]] = [],
         betas: list[float | np.ndarray[float]] = []
     ):
@@ -40,18 +40,18 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
             raise TypeError('Depth map estimator must be of type BaseDepthMapEstimator!')
         
         self._depth_map_estimator = dmap_estimator
-        self.depth_maps = depth_maps
+        self.inverse_dmaps = inverse_dmaps
         self.atm_lights = atm_lights
         self.scattering_coefs = betas
     
 
     @property
-    def depth_maps(self) -> list[np.ndarray]:
-        return self._depth_maps
+    def inverse_dmaps(self) -> list[np.ndarray]:
+        return self._inverse_dmaps
     
 
-    @depth_maps.setter
-    def depth_maps(self, dmaps: list[np.ndarray | str]):
+    @inverse_dmaps.setter
+    def inverse_dmaps(self, dmaps: list[np.ndarray | str]):
         for i, dmap in enumerate(dmaps):
             img_type = type(dmap)
             
@@ -69,7 +69,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         if size_diff > 0:
             dmaps += [None] * size_diff
         
-        self._depth_maps = dmaps
+        self._inverse_dmaps = dmaps
 
     
     @property
@@ -113,14 +113,14 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
     def _generate_foghaze_image(
         self,
         original_img: np.ndarray,
-        dmap: np.ndarray,
+        inverse_dmap: np.ndarray,
         atm_light: int | np.ndarray[int],
         scattering_coef: float | np.ndarray[float]
     ) -> tuple:
         
-        if dmap is None:
+        if inverse_dmap is None:
             self._depth_map_estimator.rgb_images = [original_img]
-            dmap = self._depth_map_estimator.estimate_depth_maps()[0]
+            inverse_dmap = self._depth_map_estimator.estimate_depth_maps()[0]
         
         if atm_light is None:
             atm_light = random.randint(0, 255)
@@ -128,8 +128,8 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         if scattering_coef is None:
             scattering_coef = random.random()
 
-        normalized_dmap = self._depth_map_estimator.normalize_depth_map(dmap, True)
-        normalized_dmap /= 255
+        normalized_dmap = inverse_dmap / np.max(inverse_dmap)   # scale to [0.0 - 1.0]
+        normalized_dmap = 1.0 - normalized_dmap     # reverse the inverse depth map
         normalized_dmap = cv.cvtColor(normalized_dmap, cv.COLOR_GRAY2RGB)
         
         transmission_map = np.exp(-scattering_coef * normalized_dmap)
@@ -137,7 +137,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         foghaze_img = original_img * transmission_map + atm_light * (1 - transmission_map)
         foghaze_img = np.array(foghaze_img, dtype=np.uint8)
 
-        return (foghaze_img, dmap, atm_light, scattering_coef)
+        return (foghaze_img, inverse_dmap, atm_light, scattering_coef)
 
 
     def generate_foghaze_images(self) -> list[np.ndarray]:
@@ -150,13 +150,13 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         for i, img in enumerate(self._rgb_images):
             result = self._generate_foghaze_image(
                 img,
-                self._depth_maps[i],
+                self._inverse_dmaps[i],
                 self._atm_lights[i],
                 self._scattering_coefs[i]
             )
             
             self.fh_images[i] = result[0]
-            self._depth_maps[i] = result[1]
+            self._inverse_dmaps[i] = result[1]
             self._atm_lights[i] = result[2]
             self._scattering_coefs[i] = result[3]
         

@@ -6,10 +6,13 @@ import numpy as np
 """
 @class A base class for depth map estimator which estimates (predicts) depth map from scene.
 This estimator accepts multiple images (expected to be RGB) as input and produces depth maps (expected to be grayscale) as output.
+A depth map can have two ways of representation:
+    Direct: the closer a pixel is, the smaller its value, and the farther it is, the larger its value.
+    Inverse: the closer a pixel is, the larger its value, the farther it is, the smaller its value.
 """
 class BaseDepthMapEstimator(ABC):
-    _rgb_images: list[np.ndarray] = []  # input as list of RGB images
-    depth_maps: list[np.ndarray] = []   # output as list of estimated depth maps
+    _rgb_images: list[np.ndarray] = []      # input as list of RGB images
+    inverse_dmaps: list[np.ndarray] = []    # output as list of estimated inverse depth maps which are grayscale images
 
 
     def __init__(self, images: list[np.ndarray | str] = []):
@@ -37,17 +40,6 @@ class BaseDepthMapEstimator(ABC):
                     images[i] = cv.cvtColor(img, cv.COLOR_BGR2RGB)
         
         self._rgb_images = images
-
-
-    """
-    A depth map can have two ways of representation:
-    First, the closer a pixel is, the smaller its value, and the farther it is, the larger its value.
-    Second,the closer a pixel is, the larger its value, the farther it is, the smaller its value.
-    Set inverse = True will switch back and forth.
-    """
-    @abstractmethod
-    def normalize_depth_map(self, dmap: np.ndarray, inverse: bool = False) -> np.ndarray:
-        pass
 
 
     @abstractmethod
