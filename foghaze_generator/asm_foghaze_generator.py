@@ -141,7 +141,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         if scattering_coef is None:
             scattering_coef = random.random()
 
-        normalized_dmap = inverse_dmap / np.max(inverse_dmap)   # scale to [0.0 - 1.0]
+        normalized_dmap = (inverse_dmap / np.max(inverse_dmap)).astype(np.float32)  # scale to [0.0 - 1.0]
         normalized_dmap = 1.0 - normalized_dmap     # reverse the inverse depth map
         normalized_dmap = cv.cvtColor(normalized_dmap, cv.COLOR_GRAY2RGB)
         
