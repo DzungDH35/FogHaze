@@ -154,8 +154,8 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
                 self._atm_lights[i],
                 self._scattering_coefs[i]
             )
-            
-            self.fh_images[i] = result[0]
+
+            self.fh_images.append(result[0])
             self._inverse_dmaps[i] = result[1]
             self._atm_lights[i] = result[2]
             self._scattering_coefs[i] = result[3]
