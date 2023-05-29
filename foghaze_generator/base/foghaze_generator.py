@@ -23,7 +23,6 @@ class BaseFogHazeGenerator(ABC):
 
     @rgb_images.setter
     def rgb_images(self, images: list[np.ndarray | str]):
-        print('parent setter')
         for i, img in enumerate(images):
             img_type = type(img)
             

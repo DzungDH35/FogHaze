@@ -47,7 +47,6 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
 
     @BaseFogHazeGenerator.rgb_images.setter
     def rgb_images(self, images: list[np.ndarray | str]):
-        print('child setter')
         super(ASMFogHazeGenerator, ASMFogHazeGenerator).rgb_images.__set__(self, images)
         self._reset_configs()
 
