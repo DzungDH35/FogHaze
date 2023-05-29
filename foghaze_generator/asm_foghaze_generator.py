@@ -45,6 +45,13 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         self.scattering_coefs = betas
     
 
+    @BaseFogHazeGenerator.rgb_images.setter
+    def rgb_images(self, images: list[np.ndarray | str]):
+        print('child setter')
+        super(ASMFogHazeGenerator, ASMFogHazeGenerator).rgb_images.__set__(self, images)
+        self._reset_configs()
+
+
     @property
     def inverse_dmaps(self) -> list[np.ndarray]:
         return self._inverse_dmaps
@@ -109,8 +116,8 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         self._scattering_coefs = betas
 
 
-    def _reset_outputs(self):
-        self._fh_images = []
+    # @private
+    def _reset_configs(self):
         self.inverse_dmaps = []
         self.atm_lights = []
         self.scattering_coefs = []
@@ -148,7 +155,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
 
 
     def generate_foghaze_images(self) -> list[np.ndarray]:
-        self._reset_outputs()
+        self._fh_images = []
 
         if len(self._rgb_images) == 0:
             print('There exists no input images!')
