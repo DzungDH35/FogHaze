@@ -8,8 +8,8 @@ import numpy as np
 This generator expects input and output images as RGB.
 """
 class BaseFogHazeGenerator(ABC):
-    _rgb_images: list[np.ndarray]   # list of original RGB images
-    fh_images: list[np.ndarray]     # list of RGB foggy-hazy images
+    _rgb_images: list[np.ndarray] = []  # list of original RGB images
+    fh_images: list[np.ndarray] = []    # list of RGB foggy-hazy images
 
 
     def __init__(self, images: list[np.ndarray | str] = []):

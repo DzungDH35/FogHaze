@@ -19,17 +19,28 @@ class MidasDmapEstimator(BaseDepthMapEstimator):
     _midas = None
     _transform = None
     _device = None
+    _midas_model_type: str
 
 
-    # @param (mixture of np.ndarray and str) images
-    # @param (str) midas_model_type
-    def __init__(self, images=[], midas_model_type='DPT_Large'):
+    def __init__(
+        self,
+        images: list[np.ndarray | str] = [],
+        midas_model_type: str = 'DPT_Large',
+        model_setup: bool = False
+    ):
         super().__init__(images)
 
-        if midas_model_type not in VALID_MIDAS_MODEL_TYPE:
-            raise ValueError('Expect midas_model_type to be one of "DPT_Large" or "DPT_Hybrid" or "MiDaS_small"!')
+        self._midas_model_type = midas_model_type
+        if model_setup:
+            self._setup_model()
+
+
+    # @private
+    def _setup_model(self):
+        if self._midas_model_type not in VALID_MIDAS_MODEL_TYPE:
+            raise ValueError('Expect midas_model_type to be "DPT_Large" or "DPT_Hybrid" or "MiDaS_small"!')
         
-        self._midas = torch.hub.load('intel-isl/MiDaS', midas_model_type)
+        self._midas = torch.hub.load('intel-isl/MiDaS', self._midas_model_type)
         
         # Move model to GPU if available
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -39,7 +50,7 @@ class MidasDmapEstimator(BaseDepthMapEstimator):
 
         # Load transforms to resize and normalize the image for large or small model
         midas_transforms = torch.hub.load('intel-isl/MiDaS', 'transforms')
-        if midas_model_type == 'DPT_Large' or midas_model_type == 'DPT_Hybrid':
+        if self._midas_model_type == 'DPT_Large' or self._midas_model_type == 'DPT_Hybrid':
             self._transform = midas_transforms.dpt_transform
         else:
             self._transform = midas_transforms.small_transform
@@ -48,15 +59,12 @@ class MidasDmapEstimator(BaseDepthMapEstimator):
     """
     Normalize depth map to unit8 by using opencv normalize, and provide an option of 'inverse'.
 
-    @param (np.ndarray) dmap - depth map
-    @param (bool) inverse - a depth map can have two ways of representation.
+    A depth map can have two ways of representation:
     First, the closer a pixel is, the smaller its value, and the farther it is, the larger its value.
     Second,the closer a pixel is, the larger its value, the farther it is, the smaller its value. 
     Set inverse = True will switch back and forth.
-
-    @return np.ndarray
     """
-    def normalize_depth_map(self, dmap, inverse=False):
+    def normalize_depth_map(self, dmap: np.ndarray, inverse: bool = False) -> np.ndarray:
         normalized_dmap = cv.normalize(dmap, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
 
         if inverse:
@@ -66,10 +74,11 @@ class MidasDmapEstimator(BaseDepthMapEstimator):
 
 
     """
-    @return (np.ndarray[]) - list of depth maps estimated by Midas are grayscale images and have type of float32
+    List of depth maps estimated by Midas are grayscale images and have type of float32.
     """
-    def estimate_depth_maps(self):
-        depth_maps = []
+    def estimate_depth_maps(self) -> list[np.ndarray]:
+        self._setup_model()
+        self.depth_maps = []
 
         if len(self._rgb_images) == 0:
             print('No base images to estimate from!')
@@ -96,7 +105,7 @@ class MidasDmapEstimator(BaseDepthMapEstimator):
                 predictions.append(prediction)
 
         for prediction in predictions:
-            depth_maps.append(prediction.cpu().numpy())
+            self.depth_maps.append(prediction.cpu().numpy())
 
-        return depth_maps
+        return self.depth_maps
     
