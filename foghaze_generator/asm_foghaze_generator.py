@@ -115,6 +115,35 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         self._scattering_coefs = betas
 
 
+    """
+    @private Randomize a constant or a numpy array of (int) atmospheric light, each value is within [0, 255].
+    """
+    def _rand_atm_light(self, np_shape: tuple = None) -> int | np.ndarray[int]:
+        if not np_shape:
+            return random.randint(0, 255)
+        
+        height, width, channel = np_shape
+        arr_2d = np.random.randint(0, 256, size=(height, width))
+        arr_3d = np.repeat(arr_2d[:, :, np.newaxis], channel, axis=2)
+
+        return arr_3d
+
+    
+    """
+    @private Randomize a constant or a numpy array of (float) scattering coefficients, each value is within [0, 3].
+    """
+    def _rand_scattering_coef(self, np_shape: tuple = None) -> float | np.ndarray[float]:
+        if not np_shape:
+            return random.uniform(0, 3)
+        
+        height, width, channel = np_shape
+        arr_2d = np.random.uniform(0, 3, size=(height, width))
+        arr_3d = np.repeat(arr_2d[:, :, np.newaxis], channel, axis=2)
+
+        return arr_3d
+
+
+
     # @private
     def _reset_configs(self):
         self.inverse_dmaps = []
