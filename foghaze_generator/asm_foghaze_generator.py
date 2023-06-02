@@ -5,6 +5,10 @@ import numpy as np
 import random
 
 
+ATM_LIGHT_BOUNDS = (0, 255) # 0 <= atmospheric light <= 255
+SCATTERING_COEF_BOUNDS = (0, 3) # 0 <= scattering coefficient <= 3
+
+
 """
 @class An implementation of fog-haze generator which utilizes atmospheric scattering model.
 
@@ -116,32 +120,42 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
 
 
     """
-    @private Randomize a constant or a numpy array of (int) atmospheric light, each value is within [0, 255].
+    @private Randomize a constant or a numpy array of (int) atmospheric light.
     """
     def _rand_atm_light(self, np_shape: tuple = None) -> int | np.ndarray[int]:
+        low, high = ATM_LIGHT_BOUNDS
+
         if not np_shape:
-            return random.randint(0, 255)
+            return random.randint(low, high)
         
         height, width, channel = np_shape
-        arr_2d = np.random.randint(0, 256, size=(height, width))
+        arr_2d = np.random.randint(low, high+1, size=(height, width))
         arr_3d = np.repeat(arr_2d[:, :, np.newaxis], channel, axis=2)
 
         return arr_3d
 
     
     """
-    @private Randomize a constant or a numpy array of (float) scattering coefficients, each value is within [0, 3].
+    @private Randomize a constant or a numpy array of (float) scattering coefficients.
     """
     def _rand_scattering_coef(self, np_shape: tuple = None) -> float | np.ndarray[float]:
+        low, high = SCATTERING_COEF_BOUNDS
+
         if not np_shape:
-            return random.uniform(0, 3)
+            return random.uniform(low, high)
         
         height, width, channel = np_shape
-        arr_2d = np.random.uniform(0, 3, size=(height, width))
+        arr_2d = np.random.uniform(low, high, size=(height, width))
         arr_3d = np.repeat(arr_2d[:, :, np.newaxis], channel, axis=2)
 
         return arr_3d
 
+
+    """
+    Use perlin noise to generate a numpy array of atmospheric light
+    """
+    def _perlin_atm_light(self):
+        pass
 
 
     # @private
