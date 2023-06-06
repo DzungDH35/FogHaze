@@ -6,13 +6,7 @@ import numpy as np
 import random
 
 
-ATM_LIGHT_BOUNDS = (0, 255) # 0 <= atmospheric light <= 255
-SCATTERING_COEF_BOUNDS = (0, 3) # 0 <= scattering coefficient <= 3
-
-
 """
-@class An implementation of fog-haze generator which utilizes atmospheric scattering model.
-
 Atmospheric Scattering Model (ASM): 
     I(x) = J(x) * t(x) + A(1 - t(x)), in which:
 
@@ -23,12 +17,24 @@ Atmospheric Scattering Model (ASM):
 
     t(x) = e^(-beta * d(x)), in which:
     d(x): depth map
+
+In the equation above, theoretically, A has a value range similar to J(x) and both are a non-negative value. Beta and d(x) are also non-negative values.
+Nevertheless, in practice, this generator is designed for input and output images in uint8 format (256 bits), so the value ranges of parameters need to be carefully considered.
+For A and J(x), it can be easily seen that they will take values from 0 to 255.
+Beta and d(x) can actually take any non-negative values. But, it is necessary to determine an appropriate range based on experimentation. The chosen range in the implementation is derived from experiments.
 """
+
+
+ATM_LIGHT_BOUNDS = (0, 255)     # 0 <= atmospheric light <= 255
+SCATTERING_COEF_BOUNDS = (0, 3) # 0 <= scattering coefficient <= 3
+
+
+# @class An implementation of fog-haze generator which utilizes atmospheric scattering model.
 class ASMFogHazeGenerator(BaseFogHazeGenerator):
-    _depth_map_estimator: BaseDepthMapEstimator = None      # an estimator to predict depth map of scene
-    _inverse_dmaps: list[np.ndarray] = []                   # list of inverse relative depth maps which are grayscale images
-    _atm_lights: list[int | np.ndarray[int]] = []           # list of atmospheric lights, each can be a constant or a pixel-position dependent value
-    _scattering_coefs: list[float | np.ndarray[float]] = [] # list of scattering coefficients, each can be a constant or a pixel-position dependent value
+    _depth_map_estimator: BaseDepthMapEstimator         # @private An estimator to predict depth map of scene.
+    _inverse_dmaps: list[np.ndarray]                    # @private A list of inverse relative depth maps which are grayscale images.
+    _atm_lights: list[int | np.ndarray[int]]            # @private A list of atmospheric lights, each can be a constant or a pixel-position dependent value.
+    _scattering_coefs: list[float | np.ndarray[float]]  # @private A list of scattering coefficients, each can be a constant or a pixel-position dependent value
 
     """
     @private List of Perlin noise configurations (each for a corresponding input image).
@@ -67,6 +73,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         self.pnoise_configs = pnoise_configs
     
 
+    # @override
     @BaseFogHazeGenerator.rgb_images.setter
     def rgb_images(self, images: list[np.ndarray | str]):
         super(ASMFogHazeGenerator, ASMFogHazeGenerator).rgb_images.__set__(self, images)
@@ -107,9 +114,10 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
 
     @atm_lights.setter
     def atm_lights(self, atm_lights: list[int | np.ndarray[int]]):
+        low, high = ATM_LIGHT_BOUNDS
+
         for i, A in enumerate(atm_lights):
-            # Because [0 ,255] is the encoding value range of input images, then atmospheric light should also take value in this range.
-            if (type(A) is int and (A < 0 or A > 255)) or (isinstance(A, np.ndarray) and np.any((A < 0) | (A > 255))):
+            if (type(A) is int and (A < low or A > high)) or (isinstance(A, np.ndarray) and np.any(A < low | A > high)):
                 raise ValueError(f'Atmospheric light at index {i} must be within [0, 255].')
         
         size_diff = len(self._rgb_images) - len(atm_lights)
@@ -126,8 +134,10 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
 
     @scattering_coefs.setter
     def scattering_coefs(self, betas: list[float | np.ndarray[float]]):
+        low, high = SCATTERING_COEF_BOUNDS
+
         for i, beta in enumerate(betas):
-            if (type(beta) is float and beta < 0) or (isinstance(beta, np.ndarray) and np.any(beta < 0)):
+            if (type(beta) is float and (beta < low or beta > high)) or (isinstance(beta, np.ndarray) and np.any(beta < low | beta > high)):
                 raise ValueError(f'Scattering coefficient at index {i} must be larger than 0.')
 
         size_diff = len(self._rgb_images) - len(betas)
@@ -144,6 +154,9 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
 
     @pnoise_configs.setter
     def pnoise_configs(self, configs: list[dict]):
+        size_diff = len(self._rgb_images) - len(configs)
+        if size_diff > 0:
+            configs += [None] * size_diff
         self._pnoise_configs = configs
 
 
@@ -163,9 +176,25 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         return low_new + (arr - low_old) * (high_new - low_new) / (high_old - low_old)
 
 
-    """
-    @private Randomize a constant or a numpy array of (int) atmospheric light.
-    """
+    # @private Generate Perlin noise as a 3-channel numpy array, each value is a float within [-1, 1].
+    def _get_perlin_noise(self, np_shape: tuple, pnoise_config: dict = {}, scaled_range: tuple = ()) -> np.ndarray[float]:
+        height, width, channel = np_shape
+        noise = np.zeros((height, width))
+        scale = pnoise_config.pop('scale') if pnoise_config.get('scale') else 1
+
+        for y in range(height):
+            for x in range(width):
+                noise[y, x] = pnoise2(x*scale, y*scale, **pnoise_config)
+
+        if scaled_range:
+            noise = self._scale_array(noise, (-1, 1), scaled_range)
+
+        noise = np.repeat(noise[:, :, np.newaxis], channel, axis=2)
+
+        return noise
+
+
+    # @private Randomize a value or a numpy array of atmospheric light.
     def _rand_atm_light(self, np_shape: tuple = None) -> int | np.ndarray[int]:
         low, high = ATM_LIGHT_BOUNDS
 
@@ -179,9 +208,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         return arr_3d
 
     
-    """
-    @private Randomize a constant or a numpy array of (float) scattering coefficients.
-    """
+    # @private Randomize a value or a numpy array of scattering coefficients.
     def _rand_scattering_coef(self, np_shape: tuple = None) -> float | np.ndarray[float]:
         low, high = SCATTERING_COEF_BOUNDS
 
@@ -195,21 +222,11 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         return arr_3d
 
 
-    # @private Generate Perlin noise as a 3-channel numpy array, each value is a float within [-1, 1].
-    def _get_perlin_noise(np_shape: tuple, pnoise_config: dict = {}) -> np.ndarray[float]:
-        height, width, channel = np_shape
-        noise = np.zeros((height, width))
-        scale = pnoise_config.pop('scale') if pnoise_config.get('scale') else 1
+    # @private Generate scattering coefficient using Perlin noise.
+    def _gen_perlin_scattering_coef(self, np_shape: tuple, pnoise_config: dict = {}):
+        return self._get_perlin_noise(np_shape, pnoise_config, SCATTERING_COEF_BOUNDS)
 
-        for y in range(height):
-            for x in range(width):
-                noise[y, x] = pnoise2(x*scale, y*scale, **pnoise_config)
 
-        noise = np.repeat(noise[:, :, np.newaxis], channel, axis=2)
-
-        return noise
-
-    
     # @private
     def _generate_foghaze_image(
         self,
@@ -241,6 +258,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         return (foghaze_img, inverse_dmap, atm_light, scattering_coef)
 
 
+    # @override
     def generate_foghaze_images(self) -> list[np.ndarray]:
         self.fh_images = []
 
