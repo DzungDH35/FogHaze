@@ -146,6 +146,14 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         self._pnoise_configs = configs
 
 
+    # @private Scale an array from range [a, b] to [c, d]
+    def _scale_array(self, arr: np.ndarray, old_range: tuple, new_range: tuple) -> np.ndarray:
+        low_old, high_old = old_range
+        low_new, high_new = new_range
+
+        return low_new + (arr - low_old) * (high_new - low_new) / (high_old - low_old)
+
+
     """
     @private Randomize a constant or a numpy array of (int) atmospheric light.
     """
@@ -190,6 +198,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         self.inverse_dmaps = []
         self.atm_lights = []
         self.scattering_coefs = []
+        self.pnoise_configs = []
 
     
     # @private
