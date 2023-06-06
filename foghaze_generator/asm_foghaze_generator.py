@@ -29,6 +29,21 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
     _atm_lights: list[int | np.ndarray[int]] = []           # list of atmospheric lights, each can be a constant or a pixel-position dependent value
     _scattering_coefs: list[float | np.ndarray[float]] = [] # list of scattering coefficients, each can be a constant or a pixel-position dependent value
 
+    """
+    @private List of Perlin noise configurations (each for a corresponding input image).
+    Each configuration is a dict with the following structure:
+    {
+        'base': int             # seed to generate different patterns
+        'lacunarity': float     # control the frequencies of the octaves
+        'octaves': int          # number of octaves, each of which is a Perlin noise, used to control the level of details
+        'persistence': float    # control the amplitudes of the octaves, hence, control the roughness
+        'repeatx': int          # control the repeat of pattern along the x-axis
+        'repeaty': int          # control the repeat of pattern along the y-axis
+        'scale': float          # scale of the net noise (sum of octaves)
+    }
+    """
+    _pnoise_configs: list[dict]
+
 
     def __init__(
         self,
@@ -36,7 +51,8 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         images: list[np.ndarray | str] = [],
         inverse_dmaps: list[np.ndarray | str] = [],
         atm_lights: list[int | np.ndarray[int]] = [],
-        betas: list[float | np.ndarray[float]] = []
+        betas: list[float | np.ndarray[float]] = [],
+        pnoise_configs: list[dict] = []
     ):
         super().__init__(images)
 
@@ -47,6 +63,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         self.inverse_dmaps = inverse_dmaps
         self.atm_lights = atm_lights
         self.scattering_coefs = betas
+        self.pnoise_configs = pnoise_configs
     
 
     @BaseFogHazeGenerator.rgb_images.setter
@@ -117,6 +134,16 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
             betas += [None] * size_diff
 
         self._scattering_coefs = betas
+
+
+    @property
+    def pnoise_configs(self) -> list[dict]:
+        return self._pnoise_configs
+
+
+    @pnoise_configs.setter
+    def pnoise_configs(self, configs: list[dict]):
+        self._pnoise_configs = configs
 
 
     """
