@@ -1,5 +1,6 @@
 from .base.depth_map_estimator import BaseDepthMapEstimator
 from .base.foghaze_generator import BaseFogHazeGenerator
+from noise import pnoise2
 import cv2 as cv
 import numpy as np
 import random
@@ -146,6 +147,14 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         self._pnoise_configs = configs
 
 
+    # @private Reset configurations of the generator
+    def _reset_configs(self):
+        self.inverse_dmaps = []
+        self.atm_lights = []
+        self.scattering_coefs = []
+        self.pnoise_configs = []
+
+
     # @private Scale an array from range [a, b] to [c, d]
     def _scale_array(self, arr: np.ndarray, old_range: tuple, new_range: tuple) -> np.ndarray:
         low_old, high_old = old_range
@@ -186,19 +195,19 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         return arr_3d
 
 
-    """
-    Use perlin noise to generate a numpy array of atmospheric light
-    """
-    def _perlin_atm_light(self):
-        pass
+    # @private Generate Perlin noise as a 3-channel numpy array, each value is a float within [-1, 1].
+    def _get_perlin_noise(np_shape: tuple, pnoise_config: dict = {}) -> np.ndarray[float]:
+        height, width, channel = np_shape
+        noise = np.zeros((height, width))
+        scale = pnoise_config.pop('scale') if pnoise_config.get('scale') else 1
 
+        for y in range(height):
+            for x in range(width):
+                noise[y, x] = pnoise2(x*scale, y*scale, **pnoise_config)
 
-    # @private
-    def _reset_configs(self):
-        self.inverse_dmaps = []
-        self.atm_lights = []
-        self.scattering_coefs = []
-        self.pnoise_configs = []
+        noise = np.repeat(noise[:, :, np.newaxis], channel, axis=2)
+
+        return noise
 
     
     # @private
