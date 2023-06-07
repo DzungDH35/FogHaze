@@ -1,4 +1,4 @@
-from .base.depth_map_estimator import BaseDepthMapEstimator
+from base.depth_map_estimator import BaseDepthMapEstimator
 import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy as np

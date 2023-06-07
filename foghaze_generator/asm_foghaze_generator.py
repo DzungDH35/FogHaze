@@ -1,12 +1,19 @@
-from .base.depth_map_estimator import BaseDepthMapEstimator
-from .base.foghaze_generator import BaseFogHazeGenerator
-from noise import pnoise2
+from base.depth_map_estimator import BaseDepthMapEstimator
+from base.foghaze_generator import BaseFogHazeGenerator
+from helper import get_perlin_noise
+from helper import scale_array
 import cv2 as cv
 import numpy as np
 import random
 
 
+ATM_LIGHT_BOUNDS = (0, 255)                 # 0 <= atmospheric light <= 255
+SCATTERING_COEF_BOUNDS = (0, float('inf'))  # 0 <= scattering coefficient <= infinity
+
+
 """
+@class An implementation of fog-haze generator which utilizes atmospheric scattering model.
+
 Atmospheric Scattering Model (ASM): 
     I(x) = J(x) * t(x) + A(1 - t(x)), in which:
 
@@ -17,24 +24,12 @@ Atmospheric Scattering Model (ASM):
 
     t(x) = e^(-beta * d(x)), in which:
     d(x): depth map
-
-In the equation above, theoretically, A has a value range similar to J(x) and both are a non-negative value. Beta and d(x) are also non-negative values.
-Nevertheless, in practice, this generator is designed for input and output images in uint8 format (256 bits), so the value ranges of parameters need to be carefully considered.
-For A and J(x), it can be easily seen that they will take values from 0 to 255.
-Beta and d(x) can actually take any non-negative values. But, it is necessary to determine an appropriate range based on experimentation. The chosen range in the implementation is derived from experiments.
 """
-
-
-ATM_LIGHT_BOUNDS = (0, 255)     # 0 <= atmospheric light <= 255
-SCATTERING_COEF_BOUNDS = (0, 3) # 0 <= scattering coefficient <= 3
-
-
-# @class An implementation of fog-haze generator which utilizes atmospheric scattering model.
 class ASMFogHazeGenerator(BaseFogHazeGenerator):
-    _depth_map_estimator: BaseDepthMapEstimator         # @private An estimator to predict depth map of scene.
-    _inverse_dmaps: list[np.ndarray]                    # @private A list of inverse relative depth maps which are grayscale images.
-    _atm_lights: list[int | np.ndarray[int]]            # @private A list of atmospheric lights, each can be a constant or a pixel-position dependent value.
-    _scattering_coefs: list[float | np.ndarray[float]]  # @private A list of scattering coefficients, each can be a constant or a pixel-position dependent value
+    _depth_map_estimator: BaseDepthMapEstimator                         # @private An estimator to predict depth map of scene.
+    _inverse_dmaps: list[np.ndarray]                                    # @private inverse relative depth map (grayscale)
+    _atm_lights: list[int | np.ndarray[int] | tuple[int]]               # @private atmospheric light (value | pixel-dependent | tuple as range)
+    _scattering_coefs: list[float | np.ndarray[float] | tuple[float]]   # @private scattering coefficients (value | pixel-dependent | tuple as range)
 
     """
     @private List of Perlin noise configurations (each for a corresponding input image).
@@ -52,13 +47,23 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
     _pnoise_configs: list[dict]
 
 
+    """
+    'atm_light_estimation': 'naive_int' | 'naive_arr' - currently, only naive algorithm is available
+    'scattering_coef_estimation': 'naive_float' | 'naive_arr' | 'pnoise'
+    """
+    operation_mode = {
+        'atm_light': 'naive_int',
+        'scattering_coef': 'pnoise'
+    }
+
+
     def __init__(
         self,
         dmap_estimator: BaseDepthMapEstimator,
         images: list[np.ndarray | str] = [],
         inverse_dmaps: list[np.ndarray | str] = [],
-        atm_lights: list[int | np.ndarray[int]] = [],
-        betas: list[float | np.ndarray[float]] = [],
+        atm_lights: list[int | np.ndarray[int] | tuple[int]] = [],
+        betas: list[float | np.ndarray[float] | tuple[float]] = [],
         pnoise_configs: list[dict] = []
     ):
         super().__init__(images)
@@ -108,17 +113,17 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
 
     
     @property
-    def atm_lights(self) -> list[int | np.ndarray[int]]:
+    def atm_lights(self) -> list[int | np.ndarray[int] | tuple[int]]:
         return self._atm_lights
     
 
     @atm_lights.setter
-    def atm_lights(self, atm_lights: list[int | np.ndarray[int]]):
+    def atm_lights(self, atm_lights: list[int | np.ndarray[int] | tuple[int]]):
         low, high = ATM_LIGHT_BOUNDS
 
         for i, A in enumerate(atm_lights):
-            if (type(A) is int and (A < low or A > high)) or (isinstance(A, np.ndarray) and np.any(A < low | A > high)):
-                raise ValueError(f'Atmospheric light at index {i} must be within [0, 255].')
+            if (type(A) is int and (A < low or A > high)) or (isinstance(A, np.ndarray) and np.any(A < low | A > high)) or (type(A) is tuple and (A[0] < low | A[1] > high)):
+                raise ValueError(f'Atmospheric light at index {i} must be within [{low}, {high}].')
         
         size_diff = len(self._rgb_images) - len(atm_lights)
         if size_diff > 0:
@@ -128,17 +133,17 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
 
     
     @property
-    def scattering_coefs(self) -> list[float | np.ndarray[float]]:
+    def scattering_coefs(self) -> list[float | np.ndarray[float] | tuple[float]]:
         return self._scattering_coefs
     
 
     @scattering_coefs.setter
-    def scattering_coefs(self, betas: list[float | np.ndarray[float]]):
+    def scattering_coefs(self, betas: list[float | np.ndarray[float] | tuple[float]]):
         low, high = SCATTERING_COEF_BOUNDS
 
         for i, beta in enumerate(betas):
-            if (type(beta) is float and (beta < low or beta > high)) or (isinstance(beta, np.ndarray) and np.any(beta < low | beta > high)):
-                raise ValueError(f'Scattering coefficient at index {i} must be larger than 0.')
+            if (type(beta) is float and (beta < low or beta > high)) or (isinstance(beta, np.ndarray) and np.any(beta < low | beta > high)) or (type(beta) is tuple and (beta[0] < low | beta[1] > high)):
+                raise ValueError(f'Scattering coefficient at index {i} must be within [{low}, {high}].')
 
         size_diff = len(self._rgb_images) - len(betas)
         if size_diff > 0:
@@ -168,35 +173,12 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         self.pnoise_configs = []
 
 
-    # @private Scale an array from range [a, b] to [c, d]
-    def _scale_array(self, arr: np.ndarray, old_range: tuple, new_range: tuple) -> np.ndarray:
-        low_old, high_old = old_range
-        low_new, high_new = new_range
-
-        return low_new + (arr - low_old) * (high_new - low_new) / (high_old - low_old)
-
-
-    # @private Generate Perlin noise as a 3-channel numpy array, each value is a float within [-1, 1].
-    def _get_perlin_noise(self, np_shape: tuple, pnoise_config: dict = {}, scaled_range: tuple = ()) -> np.ndarray[float]:
-        height, width, channel = np_shape
-        noise = np.zeros((height, width))
-        scale = pnoise_config.pop('scale') if pnoise_config.get('scale') else 1
-
-        for y in range(height):
-            for x in range(width):
-                noise[y, x] = pnoise2(x*scale, y*scale, **pnoise_config)
-
-        if scaled_range:
-            noise = self._scale_array(noise, (-1, 1), scaled_range)
-
-        noise = np.repeat(noise[:, :, np.newaxis], channel, axis=2)
-
-        return noise
-
-
     # @private Randomize a value or a numpy array of atmospheric light.
-    def _rand_atm_light(self, np_shape: tuple = None) -> int | np.ndarray[int]:
-        low, high = ATM_LIGHT_BOUNDS
+    def _rand_atm_light(self, np_shape: tuple = None, range: tuple = None) -> int | np.ndarray[int]:
+        if range:
+            low, high = range
+        else:
+            low, high = ATM_LIGHT_BOUNDS
 
         if not np_shape:
             return random.randint(low, high)
@@ -209,8 +191,11 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
 
     
     # @private Randomize a value or a numpy array of scattering coefficients.
-    def _rand_scattering_coef(self, np_shape: tuple = None) -> float | np.ndarray[float]:
-        low, high = SCATTERING_COEF_BOUNDS
+    def _rand_scattering_coef(self, np_shape: tuple = None, range: tuple = None) -> float | np.ndarray[float]:
+        if range:
+            low, high = range
+        else:
+            low, high = SCATTERING_COEF_BOUNDS
 
         if not np_shape:
             return random.uniform(low, high)
@@ -223,36 +208,52 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
 
 
     # @private Generate scattering coefficient using Perlin noise.
-    def _gen_perlin_scattering_coef(self, np_shape: tuple, pnoise_config: dict = {}):
-        return self._get_perlin_noise(np_shape, pnoise_config, SCATTERING_COEF_BOUNDS)
+    def _gen_perlin_scattering_coef(self, np_shape: tuple, pnoise_config: dict = {}, range: tuple = None):
+        if range:
+            value_bounds = range
+        else:
+            value_bounds = SCATTERING_COEF_BOUNDS
+        return get_perlin_noise(np_shape, pnoise_config, value_bounds)
 
 
     # @private
-    def _generate_foghaze_image(
-        self,
-        original_img: np.ndarray,
-        inverse_dmap: np.ndarray,
-        atm_light: int | np.ndarray[int],
-        scattering_coef: float | np.ndarray[float]
-    ) -> tuple:
+    def _generate_foghaze_image(self, img_idx: int) -> tuple:
+        clear_img = self.rgb_images[img_idx]
+        img_shape = clear_img
+        inverse_dmap = self.inverse_dmaps[img_idx]
+        atm_light = self.atm_lights[img_idx]
+        scattering_coef = self.scattering_coefs[img_idx]
         
         if inverse_dmap is None:
-            self._depth_map_estimator.rgb_images = [original_img]
+            self._depth_map_estimator.rgb_images = [clear_img]
             inverse_dmap = self._depth_map_estimator.estimate_depth_maps()[0]
         
-        if atm_light is None:
-            atm_light = random.randint(0, 255)
-        
-        if scattering_coef is None:
-            scattering_coef = random.uniform(0, 2)
+        if atm_light is None or type(atm_light) is tuple:
+            bounds = atm_light if atm_light else None
 
-        normalized_dmap = cv.normalize(inverse_dmap, None, 0, 1.0, cv.NORM_MINMAX, dtype=cv.CV_32F) # scale to [0.0 - 1.0]
-        normalized_dmap = 1.0 - normalized_dmap # reverse the inverse depth map
-        normalized_dmap = cv.cvtColor(normalized_dmap, cv.COLOR_GRAY2RGB)
+            if self.operation_mode['atm_light'] == 'naive_int':
+                atm_light = self._rand_atm_light(range=bounds)
+            else:
+                atm_light = self._rand_atm_light(img_shape, bounds)
         
-        transmission_map = np.exp(-scattering_coef * normalized_dmap)
+        if scattering_coef is None or type(scattering_coef) is tuple:
+            bounds = scattering_coef if scattering_coef else None
+            opmode = self.operation_mode['scattering_coef'] 
+            
+            if opmode == 'naive_float':
+                scattering_coef = self._rand_scattering_coef(range=bounds)
+            elif opmode == 'naive_arr':
+                scattering_coef = self._rand_scattering_coef(img_shape, bounds)
+            else:
+                scattering_coef = get_perlin_noise(img_shape, self.pnoise_configs[img_idx], bounds)
+        
+        normalized_idmap = cv.normalize(inverse_dmap, None, 0, 1.0, cv.NORM_MINMAX, dtype=cv.CV_32F) # scale to [0.0 - 1.0]
+        normalized_idmap = 1.0 - normalized_idmap # reverse the inverse depth map
+        normalized_idmap = cv.cvtColor(normalized_idmap, cv.COLOR_GRAY2RGB)
+        
+        transmission_map = np.exp(-scattering_coef * normalized_idmap)
 
-        foghaze_img = original_img * transmission_map + atm_light * (1 - transmission_map)
+        foghaze_img = clear_img * transmission_map + atm_light * (1 - transmission_map)
         foghaze_img = np.array(foghaze_img, dtype=np.uint8)
 
         return (foghaze_img, inverse_dmap, atm_light, scattering_coef)
@@ -267,12 +268,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
             return []
 
         for i, img in enumerate(self._rgb_images):
-            result = self._generate_foghaze_image(
-                img,
-                self._inverse_dmaps[i],
-                self._atm_lights[i],
-                self._scattering_coefs[i]
-            )
+            result = self._generate_foghaze_image(i)
 
             self.fh_images.append(result[0])
             self._inverse_dmaps[i] = result[1]
