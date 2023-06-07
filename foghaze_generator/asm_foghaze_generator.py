@@ -1,7 +1,6 @@
 from base.depth_map_estimator import BaseDepthMapEstimator
 from base.foghaze_generator import BaseFogHazeGenerator
 from helper import get_perlin_noise
-from helper import scale_array
 import cv2 as cv
 import numpy as np
 import random
