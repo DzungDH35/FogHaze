@@ -6,8 +6,9 @@ import numpy as np
 import random
 
 
+HUGE_NUMBER = 999999
 ATM_LIGHT_BOUNDS = (0, 255)                 # 0 <= atmospheric light <= 255
-SCATTERING_COEF_BOUNDS = (0, float('inf'))  # 0 <= scattering coefficient <= infinity
+SCATTERING_COEF_BOUNDS = (0, HUGE_NUMBER)  # 0 <= scattering coefficient <= infinity
 
 
 """
@@ -218,7 +219,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
     # @private
     def _generate_foghaze_image(self, img_idx: int) -> tuple:
         clear_img = self.rgb_images[img_idx]
-        img_shape = clear_img
+        img_shape = clear_img.shape
         inverse_dmap = self.inverse_dmaps[img_idx]
         atm_light = self.atm_lights[img_idx]
         scattering_coef = self.scattering_coefs[img_idx]
@@ -244,7 +245,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
             elif opmode == 'naive_arr':
                 scattering_coef = self._rand_scattering_coef(img_shape, bounds)
             else:
-                scattering_coef = get_perlin_noise(img_shape, self.pnoise_configs[img_idx], bounds)
+                scattering_coef = self._gen_perlin_scattering_coef(img_shape, self.pnoise_configs[img_idx], bounds)
         
         normalized_idmap = cv.normalize(inverse_dmap, None, 0, 1.0, cv.NORM_MINMAX, dtype=cv.CV_32F) # scale to [0.0 - 1.0]
         normalized_idmap = 1.0 - normalized_idmap # reverse the inverse depth map
