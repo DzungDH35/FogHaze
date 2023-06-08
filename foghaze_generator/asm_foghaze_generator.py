@@ -8,7 +8,7 @@ import random
 
 HUGE_NUMBER = 999999
 ATM_LIGHT_BOUNDS = (0, 255)                 # 0 <= atmospheric light <= 255
-SCATTERING_COEF_BOUNDS = (0, HUGE_NUMBER)  # 0 <= scattering coefficient <= infinity
+SCATTERING_COEF_BOUNDS = (0, HUGE_NUMBER)   # 0 <= scattering coefficient <= infinity
 
 
 """
