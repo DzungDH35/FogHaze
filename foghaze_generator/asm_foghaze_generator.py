@@ -10,6 +10,9 @@ HUGE_NUMBER = 999999
 ATM_LIGHT_BOUNDS = (0, 255)                 # 0 <= atmospheric light <= 255
 SCATTERING_COEF_BOUNDS = (0, HUGE_NUMBER)   # 0 <= scattering coefficient <= infinity
 
+ATM_LIGHT_OPMODES = {'naive_int', 'naive_arr'}
+SCATTERING_COEF_OPMODES = {'naive_float', 'naive_arr', 'pnoise'}
+
 
 """
 @class An implementation of fog-haze generator which utilizes atmospheric scattering model.
@@ -46,11 +49,6 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
     """
     _pnoise_configs: list[dict]
 
-
-    """
-    'atm_light_estimation': 'naive_int' | 'naive_arr' - currently, only naive algorithm is available
-    'scattering_coef_estimation': 'naive_float' | 'naive_arr' | 'pnoise'
-    """
     operation_mode = {
         'atm_light': 'naive_int',
         'scattering_coef': 'pnoise'

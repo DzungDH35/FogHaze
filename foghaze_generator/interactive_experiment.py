@@ -1,6 +1,7 @@
-from asm_foghaze_generator import ASMFogHazeGenerator
+from asm_foghaze_generator import ASMFogHazeGenerator, ATM_LIGHT_OPMODES, SCATTERING_COEF_OPMODES
+from matplotlib.widgets import TextBox, Button as PltButton
 from midas_dmap_estimator import MidasDmapEstimator
-from tkinter import Tk, Button, filedialog, messagebox
+from tkinter import Tk, filedialog, messagebox, Button as TkButton
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -142,11 +143,27 @@ class InteractiveExperiment:
 
 
     def configure_opmode(self):
+        current_opmode = self._fh_generator.operation_mode
         plt.figure(2, clear=True)
-        plt.plot([1, 40, 15, 35], [1, 45, 27, 64])
-        plt.xlabel('X')
-        plt.ylabel('Y')
-        plt.title('Mode 2')
+
+        text_box_A = TextBox(plt.axes([0.25, 0.6, 0.5, 0.05]), 'Atmospheric Light', initial=f'{current_opmode["atm_light"]}')
+        text_box_beta = TextBox(plt.axes([0.25, 0.4, 0.5, 0.05]), 'Scattering Coefficient', initial=f'{current_opmode["scattering_coef"]}')
+        submit_button = PltButton(plt.axes([0.4, 0.2, 0.2, 0.1]), 'Submit')
+
+        def submit_callback(event):
+            new_A_mode = text_box_A.text
+            new_beta_mode = text_box_beta.text
+
+            if new_A_mode not in ATM_LIGHT_OPMODES or new_beta_mode not in SCATTERING_COEF_OPMODES:
+                err_msg = 'Wrong configuration value!'
+                messagebox.showerror('Error', err_msg)
+                raise ValueError(err_msg)
+            
+            self._fh_generator.operation_mode['atm_light'] = new_A_mode
+            self._fh_generator.operation_mode['scattering_coef'] = new_beta_mode
+            messagebox.showinfo('Configure Opmode', 'Done')
+
+        submit_button.on_clicked(submit_callback)
         plt.show()
 
 
@@ -155,7 +172,11 @@ class InteractiveExperiment:
 
 
     def exec_generator(self):
-        plt.figure(4, clear=True)
+        try:
+            self._fh_generator.generate_foghaze_images()
+        except Exception as e:
+            messagebox.showerror('Error', str(e))
+        messagebox.showinfo('Execute Generator', 'Done')
 
     
     def show_clear(self):
@@ -198,17 +219,16 @@ class InteractiveExperiment:
 
     def run(self):
         root = Tk()
-        root.geometry('500x300')
         buttons = []
 
-        buttons.append(Button(root, text='Input RGB Image', command=self.input_rgb_image))
-        buttons.append(Button(root, text='Configure Operation Mode', command=self.configure_opmode))
-        buttons.append(Button(root, text='Configure Parameters', command=self.configure_params))
-        buttons.append(Button(root, text='Execute Generator', command=self.exec_generator))
-        buttons.append(Button(root, text='Clear Image', command=self.show_clear))
-        buttons.append(Button(root, text='Foggy-Hazy Image', command=self.show_fh))
-        buttons.append(Button(root, text='Inverse Depth Map', command=self.show_idmap))
-        buttons.append(Button(root, text='Perlin Noise of Beta', command=self.show_pnoise_beta))
+        buttons.append(TkButton(root, text='Input RGB Image', command=self.input_rgb_image))
+        buttons.append(TkButton(root, text='Configure Operation Mode', command=self.configure_opmode))
+        buttons.append(TkButton(root, text='Configure Parameters', command=self.configure_params))
+        buttons.append(TkButton(root, text='Execute Generator', command=self.exec_generator))
+        buttons.append(TkButton(root, text='Clear Image', command=self.show_clear))
+        buttons.append(TkButton(root, text='Foggy-Hazy Image', command=self.show_fh))
+        buttons.append(TkButton(root, text='Inverse Depth Map', command=self.show_idmap))
+        buttons.append(TkButton(root, text='Perlin Noise of Beta', command=self.show_pnoise_beta))
 
         for i, btn in enumerate(buttons):
             if i < 4:
