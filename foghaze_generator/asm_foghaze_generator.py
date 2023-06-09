@@ -1,6 +1,6 @@
-from base.depth_map_estimator import BaseDepthMapEstimator
-from base.foghaze_generator import BaseFogHazeGenerator
-from helper import get_perlin_noise
+from .base.depth_map_estimator import BaseDepthMapEstimator
+from .base.foghaze_generator import BaseFogHazeGenerator
+from .helper import get_perlin_noise
 import cv2 as cv
 import numpy as np
 import random
@@ -38,7 +38,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
     @private List of Perlin noise configurations (each for a corresponding input image).
     Each configuration is a dict with the following structure:
     {
-        'base': int             # seed to generate different patterns
+        'base': float           # seed to generate different patterns
         'lacunarity': float     # control the frequencies of the octaves
         'octaves': int          # number of octaves, each of which is a Perlin noise, used to control the level of details
         'persistence': float    # control the amplitudes of the octaves, hence, control the roughness
