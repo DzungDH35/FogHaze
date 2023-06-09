@@ -115,7 +115,7 @@ class Experiment2:
 
 
 
-class InteractiveExperiment:
+class InteractiveFHGenerator:
     _fh_generator: ASMFogHazeGenerator
     _rgb_image: np.ndarray
     file_path: str
@@ -169,6 +169,37 @@ class InteractiveExperiment:
 
     def configure_params(self):
         plt.figure(3, clear=True)
+        default_pnoise = {
+            'base': 0.0,
+            'lacunarity': 2.0,
+            'octaves': 1,
+            'persistence': 0.5,
+            'repeatx': 1024,
+            'repeaty': 1024,
+            'scale': 1
+        }
+
+        atm_light = None
+        beta = None
+        pnoise_config = default_pnoise
+        bottom_offset = 0.3
+
+        tb_pnoise = {}
+        for i, (key, value) in enumerate(pnoise_config.items()):
+            tb_pnoise[key] = TextBox(plt.axes([0.25, bottom_offset, 0.5, 0.05]), key.capitalize(), initial=value)
+            bottom_offset += 0.05
+        
+        tb_A = TextBox(plt.axes([0.25, bottom_offset + 0.2, 0.5, 0.05]), 'Atmospheric Light', initial=atm_light)
+        tb_beta = TextBox(plt.axes([0.25, bottom_offset + 0.1, 0.5, 0.05]), 'Scattering Coefficient', initial=beta)
+
+        submit_button = PltButton(plt.axes([0.4, 0.1, 0.2, 0.1]), 'Submit')
+
+        def submit_callback(event):
+            messagebox.showinfo('Configure Opmode', 'Done')
+
+        submit_button.on_clicked(submit_callback)
+
+        plt.show()
 
 
     def exec_generator(self):

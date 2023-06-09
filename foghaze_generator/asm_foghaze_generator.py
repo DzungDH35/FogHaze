@@ -257,8 +257,14 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         return (foghaze_img, inverse_dmap, atm_light, scattering_coef)
 
 
-    # @override
+    """
+    @override Return foggy-hazy image with related information:
+    inverse_dmap: the real inverse depth map estimated by algorithm
+    atm_light: the real value of atmospheric light (int | np.ndarray) estimated by algorithm
+    scattering_coef: the real value (float | np.ndarray) of scattering coefficient estimated by algorithm
+    """
     def generate_foghaze_images(self) -> list[np.ndarray]:
+        results = []
         self.fh_images = []
 
         if len(self._rgb_images) == 0:
@@ -270,7 +276,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
 
             self.fh_images.append(result[0])
             self._inverse_dmaps[i] = result[1]
-            self._atm_lights[i] = result[2]
-            self._scattering_coefs[i] = result[3]
+
+            results.append(result)
         
         return self.fh_images
