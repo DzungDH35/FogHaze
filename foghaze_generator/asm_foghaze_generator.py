@@ -159,7 +159,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
     def pnoise_configs(self, configs: list[dict]):
         size_diff = len(self._rgb_images) - len(configs)
         if size_diff > 0:
-            configs += [None] * size_diff
+            configs += [{}] * size_diff
         self._pnoise_configs = configs
 
 
