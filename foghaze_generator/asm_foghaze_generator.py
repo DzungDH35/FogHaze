@@ -36,14 +36,14 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
 
     """
     @private List of Perlin noise configurations (each for a corresponding input image).
-    Each configuration is a dict with the following structure:
+    Each configuration is a dict with the following structure (key order is important):
     {
-        'base': float           # seed to generate different patterns
-        'lacunarity': float     # control the frequencies of the octaves
         'octaves': int          # number of octaves, each of which is a Perlin noise, used to control the level of details
         'persistence': float    # control the amplitudes of the octaves, hence, control the roughness
+        'lacunarity': float     # control the frequencies of the octaves
         'repeatx': int          # control the repeat of pattern along the x-axis
         'repeaty': int          # control the repeat of pattern along the y-axis
+        'base': float           # seed to generate different patterns
         'scale': float          # scale of the net noise (sum of octaves)
     }
     """
