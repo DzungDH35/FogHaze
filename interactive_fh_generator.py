@@ -31,13 +31,14 @@ class InteractiveFHGenerator:
     _fh_generator: ASMFogHazeGenerator
     file_path: str
     generation_result: tuple
+    _info_figure_ids = {} # list of figures used to display information
 
 
     def __init__(self, fh_generator: ASMFogHazeGenerator):
         self._fh_generator = fh_generator
 
 
-    def get_time_suffix_filepath(self, file_path):
+    def _get_time_suffix_filepath(self, file_path):
         part = os.path.splitext(file_path)
         file_path = part[0] + '_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + part[1]
 
@@ -50,7 +51,7 @@ class InteractiveFHGenerator:
             *dir_path, file_name = self.file_path.split('/')
             fh_name = f'{file_name.split(".")[0]}_fh.jpg'
             fh_filepath = '/'.join(dir_path + [fh_name])
-            fh_filepath = self.get_time_suffix_filepath(fh_filepath)
+            fh_filepath = self._get_time_suffix_filepath(fh_filepath)
 
             plt.imsave(fh_filepath, fh_image)
             messagebox.showinfo('Save Foggy-Hazy Image', f'Save image successfully at {fh_filepath}!')
@@ -65,7 +66,7 @@ class InteractiveFHGenerator:
             *dir_path, file_name = self.file_path.split('/')
             idmap_name = f'{file_name.split(".")[0]}_{cmap}.jpg'
             idmap_filepath = '/'.join(dir_path + [idmap_name])
-            idmap_filepath = self.get_time_suffix_filepath(idmap_filepath)
+            idmap_filepath = self._get_time_suffix_filepath(idmap_filepath)
 
             plt.imsave(idmap_filepath, idmap, cmap=cmap)
             messagebox.showinfo('Save Inverse Depth Map', f'Save inverse depth map successfully at {idmap_filepath}!')
@@ -212,6 +213,10 @@ class InteractiveFHGenerator:
 
     def exec_generator(self):
         try:
+            for fig_id in plt.get_fignums():
+                if fig_id in self._info_figure_ids:
+                    self._info_figure_ids[fig_id]() # call to update info figure (figure displaying information)
+
             self.generation_result = self._fh_generator.generate_foghaze_images()[0]
             messagebox.showinfo('Execute Generator', 'Done')
         except Exception as e:
@@ -223,7 +228,9 @@ class InteractiveFHGenerator:
         try:
             clear = self._fh_generator.rgb_images[0]
             fh, _, real_atm_light, real_beta = self.generation_result
-            fig, axs = plt.subplots(1, 2, num=5, clear=True)
+            fig_id = 5
+            fig, axs = plt.subplots(1, 2, num=fig_id, clear=True)
+            self._info_figure_ids[fig_id] = self.show_clear_and_fh
 
             if type(real_atm_light) is np.ndarray:
                 real_atm_light = np.mean(real_atm_light)
@@ -248,7 +255,9 @@ class InteractiveFHGenerator:
         try:
             idmap = self.generation_result[1]
             real_beta = self.generation_result[3]
-            fig, axs = plt.subplots(1, 2, num=6, clear=True)
+            fig_id = 6
+            fig, axs = plt.subplots(1, 2, num=fig_id, clear=True)
+            self._info_figure_ids[fig_id] = self.show_idmap_and_pnoise
 
             axs[0].set_title(f'Inverse Depth Map {idmap.shape}')
             axs[0].imshow(idmap, cmap='gray')
@@ -275,7 +284,10 @@ class InteractiveFHGenerator:
             if type(real_beta) is np.ndarray:
                 real_beta = np.mean(real_beta)
 
-            fig, axs = plt.subplots(2, 2, num=7, clear=True)
+            fig_id = 7
+            fig, axs = plt.subplots(2, 2, num=fig_id, clear=True)
+            self._info_figure_ids[fig_id] = self.show_overall_info
+
             axs[0][0].set_title(f'Input Image {clear.shape}')
             axs[0][0].imshow(clear)
             axs[0][0].axis('off')
@@ -320,6 +332,11 @@ class InteractiveFHGenerator:
             else:
                 btn.grid(row=i-5, column=1, padx=20, pady=20)
 
+        def on_close():
+            plt.close('all')
+            root.destroy()
+
+        root.protocol('WM_DELETE_WINDOW', on_close)
         root.mainloop()
 
 
