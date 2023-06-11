@@ -213,11 +213,12 @@ class InteractiveFHGenerator:
 
     def exec_generator(self):
         try:
+            self.generation_result = self._fh_generator.generate_foghaze_images()[0]
+
             for fig_id in plt.get_fignums():
                 if fig_id in self._info_figure_ids:
                     self._info_figure_ids[fig_id]() # call to update info figure (figure displaying information)
 
-            self.generation_result = self._fh_generator.generate_foghaze_images()[0]
             messagebox.showinfo('Execute Generator', 'Done')
         except Exception as e:
             traceback.print_exc()
