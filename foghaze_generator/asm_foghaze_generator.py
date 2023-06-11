@@ -120,7 +120,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         low, high = ATM_LIGHT_BOUNDS
 
         for i, A in enumerate(atm_lights):
-            if (type(A) is int and (A < low or A > high)) or (isinstance(A, np.ndarray) and np.any(A < low | A > high)) or (type(A) is tuple and (A[0] < low | A[1] > high)):
+            if (type(A) is int and (A < low or A > high)) or (isinstance(A, np.ndarray) and np.any(A < low or A > high)) or (type(A) is tuple and (A[0] < low or A[1] > high)):
                 raise ValueError(f'Atmospheric light at index {i} must be within [{low}, {high}].')
         
         size_diff = len(self._rgb_images) - len(atm_lights)
@@ -140,7 +140,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         low, high = SCATTERING_COEF_BOUNDS
 
         for i, beta in enumerate(betas):
-            if (type(beta) is float and (beta < low or beta > high)) or (isinstance(beta, np.ndarray) and np.any(beta < low | beta > high)) or (type(beta) is tuple and (beta[0] < low | beta[1] > high)):
+            if (type(beta) is float and (beta < low or beta > high)) or (isinstance(beta, np.ndarray) and np.any(beta < low or beta > high)) or (type(beta) is tuple and (beta[0] < low or beta[1] > high)):
                 raise ValueError(f'Scattering coefficient at index {i} must be within [{low}, {high}].')
 
         size_diff = len(self._rgb_images) - len(betas)
