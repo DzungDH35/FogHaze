@@ -217,7 +217,7 @@ class InteractiveFHGenerator:
             'lacunarity': pnoise_config.get('lacunarity', 2.0),
             'repeatx': pnoise_config.get('repeatx', 1024),
             'repeaty': pnoise_config.get('repeaty', 1024),
-            'base': pnoise_config.get('base', 0.0),
+            'base': pnoise_config.get('base', 0),
             'scale': pnoise_config.get('scale', 1)
         }
 

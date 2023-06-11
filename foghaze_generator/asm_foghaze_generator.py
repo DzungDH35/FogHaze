@@ -43,7 +43,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         'lacunarity': float     # control the frequencies of the octaves
         'repeatx': int          # control the repeat of pattern along the x-axis
         'repeaty': int          # control the repeat of pattern along the y-axis
-        'base': float           # seed to generate different patterns
+        'base': int             # seed to generate different patterns
         'scale': float          # scale of the net noise (sum of octaves)
     }
     """
