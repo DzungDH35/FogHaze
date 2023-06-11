@@ -178,7 +178,6 @@ class InteractiveFHGenerator:
 
     def configure_opmode(self):
         current_opmode = self._fh_generator.operation_mode
-        print(current_opmode)
         plt.figure(3, clear=True)
 
         axis_A = plt.axes([0.4, 0.6, 0.3, 0.05])
@@ -208,9 +207,6 @@ class InteractiveFHGenerator:
 
     def configure_params(self):
         plt.figure(4, clear=True)
-        print(self._fh_generator.atm_lights)
-        print(self._fh_generator.scattering_coefs)
-        print(self._fh_generator.pnoise_configs)
 
         atm_light = self._fh_generator.atm_lights[0] if self._fh_generator.atm_lights else None
         beta = self._fh_generator.scattering_coefs[0] if self._fh_generator.scattering_coefs else None
@@ -255,7 +251,7 @@ class InteractiveFHGenerator:
             self._fh_generator.scattering_coefs = [new_beta]
 
             new_pnoise_config = {}
-            for key, textbox in tb_pnoise.items():
+            for key, textbox in reversed(tb_pnoise.items()):
                 new_pnoise_config[key] = literal_eval(textbox.text)
             self._fh_generator.pnoise_configs = [new_pnoise_config]
 
