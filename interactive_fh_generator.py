@@ -131,9 +131,10 @@ class InteractiveFHGenerator:
     def perlin_noise_image(self):
         clear = self._fh_generator.rgb_images[0]
         pnoise_config = self._fh_generator.pnoise_configs[0]
-        pnoise = get_perlin_noise(clear.shape, pnoise_config, (0, 255))
+        pnoise = get_perlin_noise(clear.shape, pnoise_config, (0, 255)).astype(np.uint8)
+        pnoise_grayscale = pnoise[:, :, 0]
 
-        return pnoise.astype(np.uint8)
+        return pnoise_grayscale
 
 
     def input_rgb_image(self):
@@ -271,7 +272,48 @@ class InteractiveFHGenerator:
             messagebox.showerror('Error', str(e))
 
     
-    def show_generation_result(self):
+    def show_clear_and_fh(self):
+        try:
+            clear = self._fh_generator.rgb_images[0]
+            fh, _, real_atm_light, real_beta = self.generation_result
+            fig, axs = plt.subplots(1, 2, num=5, clear=True)
+
+            if type(real_atm_light) is np.ndarray:
+                real_atm_light = np.mean(real_atm_light)
+            if type(real_beta) is np.ndarray:
+                real_beta = np.mean(real_beta)
+
+            axs[0].set_title(f'Input Image {clear.shape}')
+            axs[0].imshow(clear)
+
+            axs[1].set_title(f'Foggy-Hazy Image (A = {real_atm_light}, β = {real_beta})')
+            axs[1].imshow(fh)
+
+            plt.show()
+        except:
+            traceback.print_exc()
+            messagebox.showerror('Error', 'No available generation result! Please execute generator first!')
+
+        
+    def show_idmap_and_pnoise(self):
+        try:
+            idmap = self.generation_result[1]
+            real_beta = self.generation_result[3]
+            fig, axs = plt.subplots(1, 2, num=6, clear=True)
+
+            axs[0].set_title(f'Inverse Depth Map {idmap.shape}')
+            axs[0].imshow(idmap)
+
+            axs[1].set_title(f'Perlin Noise of β (avg. β = {np.mean(real_beta)})')
+            axs[1].imshow(self.perlin_noise_image())
+
+            plt.show()
+        except:
+            traceback.print_exc()
+            messagebox.showerror('Error', 'No available generation result! Please execute generator first!')
+
+    
+    def show_overall_info(self):
         try:
             clear = self._fh_generator.rgb_images[0]
             opmode = self._fh_generator.operation_mode
@@ -282,14 +324,14 @@ class InteractiveFHGenerator:
             if type(real_beta) is np.ndarray:
                 real_beta = np.mean(real_beta)
 
-            fig, axs = plt.subplots(2, 2, num=4, clear=True)
+            fig, axs = plt.subplots(2, 2, num=7, clear=True)
             axs[0][0].set_title(f'Input Image {clear.shape}')
             axs[0][0].imshow(clear)
 
             axs[0][1].set_title(f'Foggy-Hazy Image (A = {real_atm_light}, β = {real_beta})')
             axs[0][1].imshow(fh)
 
-            axs[1][0].set_title(f'Inverse Depth Map')
+            axs[1][0].set_title(f'Inverse Depth Map {idmap.shape}')
             axs[1][0].imshow(idmap)
 
             if opmode['scattering_coef'] == 'pnoise':
@@ -311,13 +353,15 @@ class InteractiveFHGenerator:
         buttons.append(TkButton(root, text='Configure Operation Mode', command=self.configure_opmode))
         buttons.append(TkButton(root, text='Configure Parameters', command=self.configure_params))
         buttons.append(TkButton(root, text='Execute Generator', command=self.exec_generator))
-        buttons.append(TkButton(root, text='Show Generation Result', command=self.show_generation_result))
+        buttons.append(TkButton(root, text='Show Clear & Foggy-Hazy Image', command=self.show_clear_and_fh))
+        buttons.append(TkButton(root, text='Show Depth Map & Perlin Noise', command=self.show_idmap_and_pnoise))
+        buttons.append(TkButton(root, text='Show Generation Result', command=self.show_overall_info))
 
         for i, btn in enumerate(buttons):
-            if i < 3:
+            if i < 4:
                 btn.grid(row=i, column=0, padx=20, pady=20)
             else:
-                btn.grid(row=i-3, column=1, padx=20, pady=20)
+                btn.grid(row=i-4, column=1, padx=20, pady=20)
 
         root.mainloop()
 
