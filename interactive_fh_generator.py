@@ -170,7 +170,7 @@ class InteractiveFHGenerator:
                 plt.figure(2, clear=True)
                 plt.title(f'Input Image {idmap.shape}')
                 plt.axis('off')
-                plt.imshow(idmap)
+                plt.imshow(idmap, cmap='gray')
                 plt.show()
             except Exception as e:
                 traceback.print_exc()
@@ -285,9 +285,11 @@ class InteractiveFHGenerator:
 
             axs[0].set_title(f'Input Image {clear.shape}')
             axs[0].imshow(clear)
+            axs[0].axis('off')
 
             axs[1].set_title(f'Foggy-Hazy Image (A = {real_atm_light}, β = {real_beta})')
             axs[1].imshow(fh)
+            axs[1].axis('off')
 
             plt.show()
         except:
@@ -302,10 +304,12 @@ class InteractiveFHGenerator:
             fig, axs = plt.subplots(1, 2, num=6, clear=True)
 
             axs[0].set_title(f'Inverse Depth Map {idmap.shape}')
-            axs[0].imshow(idmap)
+            axs[0].imshow(idmap, cmap='gray')
+            axs[0].axis('off')
 
             axs[1].set_title(f'Perlin Noise of β (avg. β = {np.mean(real_beta)})')
-            axs[1].imshow(self.perlin_noise_image())
+            axs[1].imshow(self.perlin_noise_image(), cmap='gray')
+            axs[1].axis('off')
 
             plt.show()
         except:
@@ -327,16 +331,20 @@ class InteractiveFHGenerator:
             fig, axs = plt.subplots(2, 2, num=7, clear=True)
             axs[0][0].set_title(f'Input Image {clear.shape}')
             axs[0][0].imshow(clear)
+            axs[0][0].axis('off')
 
             axs[0][1].set_title(f'Foggy-Hazy Image (A = {real_atm_light}, β = {real_beta})')
             axs[0][1].imshow(fh)
+            axs[0][1].axis('off')
 
             axs[1][0].set_title(f'Inverse Depth Map {idmap.shape}')
-            axs[1][0].imshow(idmap)
+            axs[1][0].imshow(idmap, cmap='gray')
+            axs[1][0].axis('off')
 
             if opmode['scattering_coef'] == 'pnoise':
                 axs[1][1].set_title('Perlin Noise of β')
-                axs[1][1].imshow(self.perlin_noise_image())
+                axs[1][1].imshow(self.perlin_noise_image(), cmap='gray')
+                axs[1][1].axis('off')
 
             plt.show()
         except:
