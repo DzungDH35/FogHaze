@@ -279,4 +279,4 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
 
             results.append(result)
         
-        return self.fh_images
+        return results
