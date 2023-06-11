@@ -38,10 +38,10 @@ class InteractiveFHGenerator:
 
 
     def get_time_suffix_filepath(self, file_path):
-        file_path = os.path.splitext(file_path)
-        file_path[0] += datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        part = os.path.splitext(file_path)
+        file_path = part[0] + '_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + part[1]
 
-        return ''.join(file_path)
+        return file_path
 
     
     def save_fh_image(self):
@@ -50,9 +50,8 @@ class InteractiveFHGenerator:
             *dir_path, file_name = self.file_path.split('/')
             fh_name = f'{file_name.split(".")[0]}_fh.jpg'
             fh_filepath = '/'.join(dir_path + [fh_name])
+            fh_filepath = self.get_time_suffix_filepath(fh_filepath)
 
-            if os.path.exists(fh_filepath):
-                fh_filepath = self.get_time_suffix_filepath(fh_filepath)
             plt.imsave(fh_filepath, fh_image)
             messagebox.showinfo('Save Foggy-Hazy Image', f'Save image successfully at {fh_filepath}!')
         except Exception as e:
@@ -66,9 +65,8 @@ class InteractiveFHGenerator:
             *dir_path, file_name = self.file_path.split('/')
             idmap_name = f'{file_name.split(".")[0]}_{cmap}.jpg'
             idmap_filepath = '/'.join(dir_path + [idmap_name])
+            idmap_filepath = self.get_time_suffix_filepath(idmap_filepath)
 
-            if os.path.exists(idmap_filepath):
-                idmap_filepath = self.get_time_suffix_filepath(idmap_filepath)
             plt.imsave(idmap_filepath, idmap, cmap=cmap)
             messagebox.showinfo('Save Inverse Depth Map', f'Save inverse depth map successfully at {idmap_filepath}!')
         except Exception as e:
