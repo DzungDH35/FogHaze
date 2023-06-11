@@ -1,16 +1,15 @@
+from ast import literal_eval
+from datetime import datetime
 from foghaze_generator.asm_foghaze_generator import ASMFogHazeGenerator, ATM_LIGHT_OPMODES, SCATTERING_COEF_OPMODES
-from matplotlib.widgets import TextBox, Button as PltButton
+from foghaze_generator.helper import get_perlin_noise
 from foghaze_generator.midas_dmap_estimator import MidasDmapEstimator
+from matplotlib.widgets import TextBox, Button as PltButton
 from tkinter import Tk, filedialog, messagebox, Button as TkButton
+import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-import time
-from ast import literal_eval
-import cv2 as cv
 import traceback
-from foghaze_generator.helper import get_perlin_noise
-from datetime import datetime
 
 
 def print_img_info(img, print_img: bool = False):
