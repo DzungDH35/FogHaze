@@ -40,7 +40,8 @@ class InteractiveFHGenerator:
     def reset(self):
         try:
             self._fh_generator.rgb_images = []
-            messagebox.showinfo('Reset', 'Reset generator successfully!')
+            self.generation_result = []
+            messagebox.showinfo('Reset', 'Reset generator and results successfully!')
         except Exception as e:
             traceback.print_exc()
             messagebox.showerror('Error', str(e))
@@ -55,7 +56,7 @@ class InteractiveFHGenerator:
     
     def save_fh_image(self):
         try:
-            fh_image = self._fh_generator.fh_images[0]
+            fh_image = self.generation_result[0]
             *dir_path, file_name = self.file_path.split('/')
             fh_name = f'{file_name.split(".")[0]}_fh.jpg'
             fh_filepath = '/'.join(dir_path + [fh_name])
@@ -70,7 +71,7 @@ class InteractiveFHGenerator:
 
     def save_idmap(self, cmap='gray'):
         try:
-            idmap = self._fh_generator.inverse_dmaps[0]
+            idmap = self.generation_result[1]
             *dir_path, file_name = self.file_path.split('/')
             idmap_name = f'{file_name.split(".")[0]}_{cmap}.jpg'
             idmap_filepath = '/'.join(dir_path + [idmap_name])

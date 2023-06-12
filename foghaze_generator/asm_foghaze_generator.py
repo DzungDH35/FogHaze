@@ -265,7 +265,6 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
     """
     def generate_foghaze_images(self) -> list[np.ndarray]:
         results = []
-        self.fh_images = []
 
         if len(self._rgb_images) == 0:
             print('There exists no input images!')
@@ -273,10 +272,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
 
         for i, img in enumerate(self._rgb_images):
             result = self._generate_foghaze_image(i)
-
-            self.fh_images.append(result[0])
             self._inverse_dmaps[i] = result[1]
-
             results.append(result)
         
         return results
