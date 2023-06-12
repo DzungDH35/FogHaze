@@ -38,7 +38,12 @@ class InteractiveFHGenerator:
 
 
     def reset(self):
-        self._fh_generator.rgb_images = []
+        try:
+            self._fh_generator.rgb_images = []
+            messagebox.showinfo('Reset', 'Reset generator successfully!')
+        except Exception as e:
+            traceback.print_exc()
+            messagebox.showerror('Error', str(e))
 
 
     def _get_time_suffix_filepath(self, file_path):
