@@ -41,6 +41,7 @@ class InteractiveFHGenerator:
         try:
             self._fh_generator.rgb_images = []
             self.generation_result = []
+            plt.close('all')
             messagebox.showinfo('Reset', 'Reset generator and results successfully!')
         except Exception as e:
             traceback.print_exc()
