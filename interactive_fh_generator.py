@@ -198,7 +198,8 @@ class InteractiveFHGenerator:
         tb_A = TextBox(axis_A, 'Atmospheric Light', initial=atm_light)
         axis_A.text(0, 1.2, f'Valid type: int | tuple[int, int]', color='red')
 
-        submit_button = PltButton(plt.axes([0.4, 0.1, 0.2, 0.1]), 'Submit')
+        submit_button = PltButton(plt.axes([0.26, 0.1, 0.2, 0.1]), 'Submit')
+        submit_exec_btn = PltButton(plt.axes([0.49, 0.1, 0.2, 0.1]), 'Submit & Execute')
 
         def submit_callback(event):
             new_A = literal_eval(tb_A.text) if tb_A.text else None
@@ -216,7 +217,13 @@ class InteractiveFHGenerator:
 
             print('Configure parameters successfully!')
 
+
+        def submit_exec_callback(event):
+            submit_callback(event)
+            self.exec_generator()
+
         submit_button.on_clicked(submit_callback)
+        submit_exec_btn.on_clicked(submit_exec_callback)
 
         plt.show()
 
