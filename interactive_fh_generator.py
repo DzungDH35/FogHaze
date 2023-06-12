@@ -282,7 +282,7 @@ class InteractiveFHGenerator:
             axs[0].axis('off')
 
             if self._fh_generator.operation_mode['scattering_coef'] == 'pnoise':
-                axs[1].set_title(f'Perlin Noise of β (avg. β = {np.mean(real_beta)})')
+                axs[1].set_title(f'Perlin Noise Distribution of β (avg. β = {np.mean(real_beta)})')
                 axs[1].imshow(self.perlin_noise_image(), cmap='gray')
             axs[1].axis('off')
 
@@ -320,7 +320,7 @@ class InteractiveFHGenerator:
             axs[1][0].axis('off')
 
             if opmode['scattering_coef'] == 'pnoise':
-                axs[1][1].set_title('Perlin Noise of β')
+                axs[1][1].set_title('Perlin Noise Distribution of β')
                 axs[1][1].imshow(self.perlin_noise_image(), cmap='gray')
             axs[1][1].axis('off')
 
