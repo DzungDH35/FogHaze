@@ -37,6 +37,10 @@ class InteractiveFHGenerator:
         self._fh_generator = fh_generator
 
 
+    def reset(self):
+        self._fh_generator.rgb_images = []
+
+
     def _get_time_suffix_filepath(self, file_path):
         part = os.path.splitext(file_path)
         file_path = part[0] + '_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + part[1]
@@ -263,8 +267,9 @@ class InteractiveFHGenerator:
             axs[0].imshow(idmap, cmap='gray')
             axs[0].axis('off')
 
-            axs[1].set_title(f'Perlin Noise of β (avg. β = {np.mean(real_beta)})')
-            axs[1].imshow(self.perlin_noise_image(), cmap='gray')
+            if self._fh_generator.operation_mode['scattering_coef'] == 'pnoise':
+                axs[1].set_title(f'Perlin Noise of β (avg. β = {np.mean(real_beta)})')
+                axs[1].imshow(self.perlin_noise_image(), cmap='gray')
             axs[1].axis('off')
 
             plt.show()
@@ -303,7 +308,7 @@ class InteractiveFHGenerator:
             if opmode['scattering_coef'] == 'pnoise':
                 axs[1][1].set_title('Perlin Noise of β')
                 axs[1][1].imshow(self.perlin_noise_image(), cmap='gray')
-                axs[1][1].axis('off')
+            axs[1][1].axis('off')
 
             plt.show()
         except:
@@ -325,6 +330,7 @@ class InteractiveFHGenerator:
         buttons.append(TkButton(root, text='Show Clear & Foggy-Hazy Image', command=self.show_clear_and_fh))
         buttons.append(TkButton(root, text='Show Depth Map & Perlin Noise', command=self.show_idmap_and_pnoise))
         buttons.append(TkButton(root, text='Show Generation Result', command=self.show_overall_info))
+        buttons.append(TkButton(root, text='Reset', command=self.reset))
 
         for i, btn in enumerate(buttons):
             if i < 5:
