@@ -44,7 +44,7 @@ class InteractiveFHGenerator:
             messagebox.showinfo('Reset', 'Reset generator and results successfully!')
         except Exception as e:
             traceback.print_exc()
-            messagebox.showerror('Error', str(e))
+            messagebox.showerror('Error', 'Cannot reset because an error occurs. Please view the log!')
 
 
     def _get_time_suffix_filepath(self, file_path):
@@ -66,7 +66,7 @@ class InteractiveFHGenerator:
             messagebox.showinfo('Save Foggy-Hazy Image', f'Save image successfully at {fh_filepath}!')
         except Exception as e:
             traceback.print_exc()
-            messagebox.showerror('Error', str(e))
+            messagebox.showerror('Error', 'Cannot save image because an error occurs. Please view the log!')
 
 
     def save_idmap(self, cmap='gray'):
@@ -81,7 +81,7 @@ class InteractiveFHGenerator:
             messagebox.showinfo('Save Inverse Depth Map', f'Save inverse depth map successfully at {idmap_filepath}!')
         except Exception as e:
             traceback.print_exc()
-            messagebox.showerror('Error', str(e))
+            messagebox.showerror('Error', 'Cannot save depth map because an error occurs. Please view the log!')
 
     
     def perlin_noise_image(self):
@@ -111,7 +111,7 @@ class InteractiveFHGenerator:
                 plt.show()
             except Exception as e:
                 traceback.print_exc()
-                messagebox.showerror('Error', str(e))
+                messagebox.showerror('Error', 'Cannot input image because an error occurs. Please view the log!')
 
 
     def input_inverse_dmap(self):
@@ -131,7 +131,7 @@ class InteractiveFHGenerator:
                 plt.show()
             except Exception as e:
                 traceback.print_exc()
-                messagebox.showerror('Error', str(e))
+                messagebox.showerror('Error', 'Cannot input depth map because an error occurs. Please view the log!')
 
 
     def configure_opmode(self):
@@ -231,7 +231,7 @@ class InteractiveFHGenerator:
             messagebox.showinfo('Execute Generator', 'Done')
         except Exception as e:
             traceback.print_exc()
-            messagebox.showerror('Error', str(e))
+            messagebox.showerror('Error', 'Cannot execute generation process because an error occurs. Please view the log!')
 
     
     def show_clear_and_fh(self):
