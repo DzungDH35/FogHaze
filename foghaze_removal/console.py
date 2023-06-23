@@ -4,6 +4,7 @@ import cv2 as cv
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 import time
 
 
@@ -66,15 +67,27 @@ if __name__ == '__main__':
     parser.add_argument('-t0', type=float, default=DEFAULT_T0, help='t0 controls lower bound of transmission map')
     parser.add_argument('-r', '--radius', type=int, default=DEFAULT_RADIUS, help='Radius of guided filter')
     parser.add_argument('-eps', '--epsilon', type=float, default=DEFAULT_EPS, help='Epsilon (regularization term of guided filter)')
+    parser.add_argument('-sm', '--save-mode', type=int, choices=[0, 1, 2], default=1, help='0 - not save, 1 - save only recovered image, 2 - save all related results')
 
     kwargs = vars(parser.parse_args())
-
     input_image_path = kwargs.pop('input_image')
+    save_mode = kwargs.pop('save_mode')
+
     bgr_image = cv.imread(input_image_path)
     if bgr_image is None:
         raise Exception(f'Cannot read the image file path: "{input_image_path}"')
 
     result = dfh_with_measurement(bgr_image, kwargs)
+
+    if save_mode:
+        recovered_rgb = cv.cvtColor(result['recovered_bgr'], cv.COLOR_BGR2RGB)
+        input_image_fname = os.path.splitext(input_image_path)[0]
+
+        plt.imsave(input_image_fname + '_recovered.jpg', recovered_rgb)
+        if save_mode == 2:
+            plt.imsave(input_image_fname + '_dc.jpg', result['dark_channel'], cmap='gray')
+            plt.imsave(input_image_fname + '_base_tmap.jpg', result['base_tmap'], cmap='gray')
+            plt.imsave(input_image_fname + '_refined_tmap.jpg', result['refined_tmap'], cmap='gray')
 
     # rgb = cv.cvtColor(bgr_image, cv.COLOR_BGR2RGB)
     # recovered_rgb = cv.cvtColor(result['recovered_bgr'], cv.COLOR_BGR2RGB)
