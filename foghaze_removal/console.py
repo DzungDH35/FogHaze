@@ -78,9 +78,10 @@ if __name__ == '__main__':
         raise Exception(f'Cannot read the image file path: "{input_image_path}"')
 
     result = dfh_with_measurement(bgr_image, kwargs)
+    rgb = cv.cvtColor(bgr_image, cv.COLOR_BGR2RGB)
+    recovered_rgb = cv.cvtColor(result['recovered_bgr'], cv.COLOR_BGR2RGB)
 
     if save_mode:
-        recovered_rgb = cv.cvtColor(result['recovered_bgr'], cv.COLOR_BGR2RGB)
         input_image_fname = os.path.splitext(input_image_path)[0]
 
         plt.imsave(input_image_fname + '_recovered.jpg', recovered_rgb)
@@ -89,10 +90,8 @@ if __name__ == '__main__':
             plt.imsave(input_image_fname + '_base_tmap.jpg', result['base_tmap'], cmap='gray')
             plt.imsave(input_image_fname + '_refined_tmap.jpg', result['refined_tmap'], cmap='gray')
 
-    # rgb = cv.cvtColor(bgr_image, cv.COLOR_BGR2RGB)
-    # recovered_rgb = cv.cvtColor(result['recovered_bgr'], cv.COLOR_BGR2RGB)
     # plot_multiple_images([rgb])
     # plot_multiple_images([result['dark_channel']])
     # plot_multiple_images([result['base_tmap']])
-    # plot_multiple_images([recovered_rgb])
-    # plot_multiple_images([rgb, recovered_rgb, result['dark_channel'], result['base_tmap']])
+    # plot_multiple_images([rgb, recovered_rgb])
+    plot_multiple_images([rgb, recovered_rgb, result['dark_channel'], result['base_tmap']])
