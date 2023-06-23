@@ -19,6 +19,8 @@ def _normalized_image(image):
         return image / 255
     elif dtype == np.uint16:
         return image / 65535
+    elif dtype not in [np.float32, np.float64]:
+        raise TypeError('Not supported image type!')
     
     return image
         
@@ -68,6 +70,7 @@ def defoghaze(
     refined_tmap = cv.ximgproc.guidedFilter(gray_image, base_tmap, radius, epsilon)
 
     recovered_bgr = (normalized_bgr - atm_light) / np.maximum(refined_tmap.reshape(*refined_tmap.shape, 1), t0) + atm_light
+    np.clip(recovered_bgr, 0, 1, recovered_bgr)
 
     return {
         'dark_channel': dark_channel,

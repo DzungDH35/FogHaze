@@ -65,4 +65,9 @@ if __name__ == '__main__':
 
     rgb = cv.cvtColor(bgr_image, cv.COLOR_BGR2RGB)
     recovered_rgb = cv.cvtColor(result['recovered_bgr'], cv.COLOR_BGR2RGB)
-    plot_multiple_images([rgb, recovered_rgb, result['dark_channel'], result['base_tmap']])
+
+    # plot_multiple_images([rgb])
+    # plot_multiple_images([result['dark_channel']])
+    # plot_multiple_images([result['base_tmap']])
+    # plot_multiple_images([recovered_rgb])
+    # plot_multiple_images([rgb, recovered_rgb, result['dark_channel'], result['base_tmap']])
