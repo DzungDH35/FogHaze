@@ -1,10 +1,10 @@
 from DCP import DEFAULT_PATCH_SIZE, DEFAULT_OMEGA, DEFAULT_T0, DEFAULT_RADIUS, DEFAULT_EPS, defoghaze
 import argparse
 import cv2 as cv
+import math
 import matplotlib.pyplot as plt
 import numpy as np
 import time
-import math
 
 
 def print_img_info(img, print_img: bool = False):
@@ -45,6 +45,19 @@ def plot_multiple_images(images, cmap='gray'):
     plt.show()
 
 
+# Run defoghaze with simple time measurement
+def dfh_with_measurement(bgr_image: np.ndarray, kwargs: dict) -> dict:
+    h, w, c = bgr_image.shape
+    start = time.perf_counter()
+    result = defoghaze(bgr_image, **kwargs)
+    end = time.perf_counter()
+    print(f'Proccess image {bgr_image.shape} with {h*w} pixels (not consider all 3 channels)')
+    print('Execution time (s):', end-start)
+    print('FPS: ', 1/(end-start))
+
+    return result
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('input_image', help='Input Image Path')
@@ -60,12 +73,11 @@ if __name__ == '__main__':
     bgr_image = cv.imread(input_image_path)
     if bgr_image is None:
         raise Exception(f'Cannot read the image file path: "{input_image_path}"')
-    
-    result = defoghaze(bgr_image, **kwargs)
 
-    rgb = cv.cvtColor(bgr_image, cv.COLOR_BGR2RGB)
-    recovered_rgb = cv.cvtColor(result['recovered_bgr'], cv.COLOR_BGR2RGB)
+    result = dfh_with_measurement(bgr_image, kwargs)
 
+    # rgb = cv.cvtColor(bgr_image, cv.COLOR_BGR2RGB)
+    # recovered_rgb = cv.cvtColor(result['recovered_bgr'], cv.COLOR_BGR2RGB)
     # plot_multiple_images([rgb])
     # plot_multiple_images([result['dark_channel']])
     # plot_multiple_images([result['base_tmap']])

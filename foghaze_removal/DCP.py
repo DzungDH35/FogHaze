@@ -11,7 +11,7 @@ DEFAULT_EPS = 0.0001
 
 
 # Normalize image to [0, 1] and use dtype 'float32'
-def _normalized_image(image):
+def _normalized_image(image: np.ndarray) -> np.ndarray:
     dtype = image.dtype
     image = image.astype(np.float32)
 
