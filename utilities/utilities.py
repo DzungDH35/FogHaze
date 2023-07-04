@@ -18,7 +18,7 @@ def read_images_from_path(path: str, color_mode='BGR') -> list:
             raise Exception(f'Image path "{path}" cannot be read!')
         images.append(cv.imread(path))
     elif os.path.isdir(path):
-        for file_name in os.listdir(path):
+        for file_name in sorted(os.listdir(path)):
 
             if os.path.splitext(file_name)[1].lower() in VALID_IMG_EXTENSIONS:
                 img = cv.imread(os.path.join(path, file_name))
