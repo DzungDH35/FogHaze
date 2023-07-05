@@ -1,4 +1,4 @@
-from dcp import DEFAULT_PATCH_SIZE, DEFAULT_OMEGA, DEFAULT_T0, DEFAULT_RADIUS, DEFAULT_EPS, defoghaze
+from foghaze_removal.dcp import DEFAULT_PATCH_SIZE, DEFAULT_OMEGA, DEFAULT_T0, DEFAULT_RADIUS, DEFAULT_EPS, defoghaze
 import argparse
 import cv2 as cv
 import math
