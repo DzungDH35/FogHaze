@@ -1,8 +1,23 @@
 import cv2 as cv
+import numpy as np
 import os
 
 
 VALID_IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png')
+
+
+# Use minmax normalization to scale range of an array to a new range (default is [0, 1])
+def minmax_normalize(arr: np.ndarray, current_range: tuple, new_range: tuple = (0, 1), new_dtype = None) -> np.ndarray:
+    if not new_dtype:
+        new_dtype = arr.dtype
+
+    low_current, high_current = current_range
+    low_new, high_new = new_range
+
+    new_arr = low_new + (arr.astype(np.float64) - low_current) * (high_new - low_new) / (high_current - low_current)
+
+    return new_arr.astype(new_dtype)
+
 
 """
 Path, which is of an image or a directory of images, is read into a list of RGB or BGR images.
