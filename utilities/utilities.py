@@ -7,14 +7,23 @@ VALID_IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png')
 
 
 # Use minmax normalization to scale range of an array to a new range (default is [0, 1])
-def minmax_normalize(arr: np.ndarray, current_range: tuple, new_range: tuple = (0, 1), new_dtype = None) -> np.ndarray:
+def minmax_normalize(arr: np.ndarray, current_range: tuple = None, new_range: tuple = (0, 1), new_dtype = None) -> np.ndarray:
+    if not current_range:
+        if arr.dtype == np.uint8:
+            current_range = (0, 255)
+        elif arr.dtype == np.uint16:
+            current_range = (0, 65535)
+        else:
+            raise TypeError('Must provide current range of values!')
+
     if not new_dtype:
         new_dtype = arr.dtype
+    
+    if current_range != new_range:
+        low_current, high_current = current_range
+        low_new, high_new = new_range
 
-    low_current, high_current = current_range
-    low_new, high_new = new_range
-
-    new_arr = low_new + (arr.astype(np.float64) - low_current) * (high_new - low_new) / (high_current - low_current)
+        new_arr = low_new + (arr.astype(np.float64) - low_current) * (high_new - low_new) / (high_current - low_current)
 
     return new_arr.astype(new_dtype)
 
