@@ -104,9 +104,9 @@ def defoghaze(
     recovered_bgr = np.clip(recovered_bgr, 0, 1)
 
     return {
-        'dark_channels': dark_channels,
+        'dark_channel': dark_channels[0],
         'atm_light': atm_light,
-        'base_tmaps': base_tmaps,
+        'base_tmap': base_tmaps[0],
         'refined_tmap': refined_tmap,
         'recovered_bgr': recovered_bgr
     }
