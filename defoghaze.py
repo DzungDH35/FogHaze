@@ -8,6 +8,7 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import pandas as pd
 import time
 import utilities.utilities as utils
 
@@ -63,6 +64,11 @@ FILE_SUFFIX_RECOVERED = '_recovered'
 FILE_NAME_PERF_REPORT = 'performance_report.txt'
 
 
+def highlight_max(s):
+    is_max = s == s.max()
+    return ['font-weight: bold' if v else '' for v in is_max]
+
+
 def add_algorithm_arguments(parser: argparse.ArgumentParser, parser_config: dict):
     for arg_key, config in parser_config.items():
         parser.add_argument(
@@ -112,6 +118,7 @@ if __name__ == '__main__':
 
     # Run algorithm with performance measurement
     results = {}
+    runtime = {}
     psnrs = {}
     ssims = {}
     
@@ -129,6 +136,7 @@ if __name__ == '__main__':
         print('Speed (1-time measurement):')
         print('-- Execution time (s):', elapsed_time)
         print('-- FPS: ', 1/(elapsed_time), '\n')
+        runtime[i] = elapsed_time
 
         if gt_path:
             psnr = sk_psnr(bgr_gts[i], dfh_result['recovered_bgr'])
@@ -163,9 +171,20 @@ if __name__ == '__main__':
                 plt.imsave(os.path.join(output_path, fname_base_tmap), result['base_tmap'], cmap='gray')
                 plt.imsave(os.path.join(output_path, fname_refined_tmap), result['refined_tmap'], cmap='gray')
                 cv.imwrite(os.path.join(output_path, fname_recovered), result['recovered_bgr'])
-            
+
         if gt_path and (save_mode == 2 or save_mode == 3):
-            print(psnrs)
-            print(avg_psnr)
-            print(ssims)
-            print(avg_ssim)
+            df = pd.DataFrame({'Speed (one-time measurement)': runtime, 'PSNR': psnrs, 'SSIM': ssims})
+            df.loc['Average'] = [avg_psnr, avg_ssim]
+            df = df.style.apply(highlight_max, subset=['PSNR'], axis=0)\
+                                    .apply(highlight_max, subset=['SSIM'], axis=0)
+            df.to_csv(os.path.join(output_path, FILE_NAME_PERF_REPORT))
+
+    # Plot results
+    for i, result in results.items():
+        plot_multiple_images([
+            cv.cvtColor(bgr_images[i], cv.COLOR_BGR2RGB),
+            cv.cvtColor(result['recovered_bgr'], cv.COLOR_BGR2RGB),
+            result['base_tmap'],
+            result['refined_tmap']
+        ])
+        

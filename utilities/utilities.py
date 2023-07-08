@@ -45,7 +45,7 @@ def read_images_from_path(path: str, color_mode='BGR', index: bool = True) -> di
         if img is None:
             raise Exception(f'Image path "{path}" cannot be read!')
         
-        file_names.append(path)
+        file_names.append(os.path.basename(path))
         images.append(cv.imread(path))
     elif os.path.isdir(path):
         for file_name in sorted(os.listdir(path)):
