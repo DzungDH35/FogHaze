@@ -1,7 +1,3 @@
-"""
-1/ Algorithm will work with normalized image, which has value within [0, 1] and dtype = float32
-"""
-
 import cv2 as cv
 import math
 import numpy as np
