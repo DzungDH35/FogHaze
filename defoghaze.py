@@ -106,7 +106,7 @@ if __name__ == '__main__':
     parser.add_argument('input_path', help='Path of a foggy/hazy image(s) or a directory of ones to be processed')
     parser.add_argument('-gp', '--gt-path', help='Path of corresponding ground-truth image or a directory of corresponding ones used for assessment')
     parser.add_argument('-op', '--output-path', help='Path of a directory to store defoghazing results')
-    parser.add_argument('-sm', '--save-mode', type=int, choices=(0, 1, 2, 3), default=0, help='0 - no results are saved, 1 - save only defoghazing results, 2 - save only performance report, 3 - save all results')
+    parser.add_argument('-sm', '--save-mode', type=int, choices=(0, 1, 2, 3), default=3, help='0 - no results are saved, 1 - save only defoghazing results, 2 - save only performance report, 3 - save all results')
     add_algorithm_arguments(parser, algo_parser_config)
 
     kwargs = vars(parser.parse_args())
