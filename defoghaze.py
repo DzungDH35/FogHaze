@@ -63,7 +63,7 @@ FILE_SUFFIX_REFINED_TMAP = '_refined_tmap'
 FILE_SUFFIX_RECOVERED = '_recovered'
 FILE_NAME_PERF_REPORT = 'performance_report.html'
 
-MAX_DISPLAYED_FIGURE = 3
+MAX_DISPLAYED_FIGURES = 3
 
 
 def highlight_max(s):
@@ -107,6 +107,7 @@ if __name__ == '__main__':
     parser.add_argument('-gp', '--gt-path', help='Path of corresponding ground-truth image or a directory of corresponding ones used for assessment')
     parser.add_argument('-op', '--output-path', help='Path of a directory to store defoghazing results')
     parser.add_argument('-sm', '--save-mode', type=int, choices=(0, 1, 2, 3), default=3, help='0 - no results are saved, 1 - save only defoghazing results, 2 - save only performance report, 3 - save all results')
+    parser.add_argument('-dm', '--display-mode', type=int, choices=(0, 1), default=1, help='0 - no results are displayed, 1 - display defoghazing results within limit (maximum figures)')
     add_algorithm_arguments(parser, algo_parser_config)
 
     kwargs = vars(parser.parse_args())
@@ -122,6 +123,7 @@ if __name__ == '__main__':
 
     output_path = kwargs.pop('output_path')
     save_mode = kwargs.pop('save_mode')
+    display_mode = kwargs.pop('display_mode')
 
     # Remaining keys are used to pass to algorithm, and, None value will be removed
     kwargs = {key: value for key, value in kwargs.items() if value is not None}
@@ -192,18 +194,17 @@ if __name__ == '__main__':
             styled_df.to_html(os.path.join(output_path, FILE_NAME_PERF_REPORT))
 
     # Plot results
-    cnt = 0
-    if len(results) > MAX_DISPLAYED_FIGURE:
-        print(f'Display only {MAX_DISPLAYED_FIGURE}/{len(results)} defoghazing results!')
-    for i, result in results.items():
-        if cnt == MAX_DISPLAYED_FIGURE:
-            break
-
-        plot_multiple_images([
-            cv.cvtColor(bgr_images[i], cv.COLOR_BGR2RGB),
-            cv.cvtColor(result['recovered_bgr'], cv.COLOR_BGR2RGB),
-            result['base_tmap'],
-            result['refined_tmap']
-        ])
-
-        cnt += 1
+    if display_mode == 1:
+        cnt = 0
+        if len(results) > MAX_DISPLAYED_FIGURES:
+            print(f'Display only {MAX_DISPLAYED_FIGURES}/{len(results)} defoghazing results!')
+        for i, result in results.items():
+            if cnt == MAX_DISPLAYED_FIGURES:
+                break
+            plot_multiple_images([
+                cv.cvtColor(bgr_images[i], cv.COLOR_BGR2RGB),
+                cv.cvtColor(result['recovered_bgr'], cv.COLOR_BGR2RGB),
+                result['base_tmap'],
+                result['refined_tmap']
+            ])
+            cnt += 1
