@@ -171,11 +171,11 @@ if __name__ == '__main__':
         
         if save_mode == 1 or save_mode == 3:
             for i, result in results.items():
-                fname = os.path.splitext(i)[0]
-                fname_dc = fname + FILE_SUFFIX_DARK_CHANNEL + '.jpg'
-                fname_base_tmap = fname + FILE_SUFFIX_BASE_TMAP + '.jpg'
-                fname_refined_tmap = fname + FILE_SUFFIX_REFINED_TMAP + '.jpg'
-                fname_recovered = fname + FILE_SUFFIX_RECOVERED + '.jpg'
+                fname, ext = os.path.splitext(i)
+                fname_dc = fname + FILE_SUFFIX_DARK_CHANNEL + ext
+                fname_base_tmap = fname + FILE_SUFFIX_BASE_TMAP + ext
+                fname_refined_tmap = fname + FILE_SUFFIX_REFINED_TMAP + ext
+                fname_recovered = fname + FILE_SUFFIX_RECOVERED + ext
 
                 plt.imsave(os.path.join(output_path, fname_dc), result['dark_channel'], cmap='gray')
                 plt.imsave(os.path.join(output_path, fname_base_tmap), result['base_tmap'], cmap='gray')
@@ -198,7 +198,7 @@ if __name__ == '__main__':
     for i, result in results.items():
         if cnt == MAX_DISPLAYED_FIGURE:
             break
-        
+
         plot_multiple_images([
             cv.cvtColor(bgr_images[i], cv.COLOR_BGR2RGB),
             cv.cvtColor(result['recovered_bgr'], cv.COLOR_BGR2RGB),
