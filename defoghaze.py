@@ -116,10 +116,10 @@ if __name__ == '__main__':
     bgr_images = utils.read_images_from_path(input_path)
 
     gt_path = kwargs.pop('gt_path')
-    bgr_gts = None
+    bgr_gts = {}
     if gt_path:
         bgr_gts = utils.read_images_from_path(gt_path)
-    
+
     output_path = kwargs.pop('output_path')
     save_mode = kwargs.pop('save_mode')
 
