@@ -61,12 +61,21 @@ FILE_SUFFIX_DARK_CHANNEL = '_dc'
 FILE_SUFFIX_BASE_TMAP = '_base_tmap'
 FILE_SUFFIX_REFINED_TMAP = '_refined_tmap'
 FILE_SUFFIX_RECOVERED = '_recovered'
-FILE_NAME_PERF_REPORT = 'performance_report.txt'
+FILE_NAME_PERF_REPORT = 'performance_report.html'
+
+MAX_DISPLAYED_FIGURE = 3
 
 
 def highlight_max(s):
     is_max = s == s.max()
-    return ['font-weight: bold' if v else '' for v in is_max]
+    is_max['Average'] = False
+    return ['color: #00ff00' if v else '' for v in is_max]
+
+
+def highlight_min(s):
+    is_min = s == s.min()
+    is_min['Average'] = False
+    return ['color: #ff0000' if v else '' for v in is_min]
 
 
 def add_algorithm_arguments(parser: argparse.ArgumentParser, parser_config: dict):
@@ -82,8 +91,9 @@ if __name__ == '__main__':
     print('Supported algorithms:', SUPPORTED_ALGORITHMS)
     algo = input('Select algorithm: ')
     if algo not in SUPPORTED_ALGORITHMS:
-        print('Not supported algorithm!')
+        raise Exception('Not supported algorithm!')
 
+    # Choose defoghazing algorithm for the main program
     if algo == 'dcp':
         algo_parser_config = DCP_PARSER_CONFIG
         defoghaze = dcp_defoghaze
@@ -91,6 +101,7 @@ if __name__ == '__main__':
         algo_parser_config = IMPROVED_DCP_PARSER_CONFIG
         defoghaze = idcp_defoghaze
 
+    # Build arguments for console
     parser = argparse.ArgumentParser()
     parser.add_argument('input_path', help='Path of a foggy/hazy image(s) or a directory of ones to be processed')
     parser.add_argument('-gp', '--gt-path', help='Path of corresponding ground-truth image or a directory of corresponding ones used for assessment')
@@ -103,7 +114,6 @@ if __name__ == '__main__':
 
     input_path = kwargs.pop('input_path')
     bgr_images = utils.read_images_from_path(input_path)
-    print('Num of BGR images:', len(bgr_images))
 
     gt_path = kwargs.pop('gt_path')
     bgr_gts = None
@@ -138,7 +148,7 @@ if __name__ == '__main__':
         print('-- FPS: ', 1/(elapsed_time), '\n')
         runtime[i] = elapsed_time
 
-        if gt_path:
+        if i in bgr_gts:
             psnr = sk_psnr(bgr_gts[i], dfh_result['recovered_bgr'])
             ssim = sk_ssim(cv.cvtColor(bgr_gts[i], cv.COLOR_BGR2GRAY), cv.cvtColor(dfh_result['recovered_bgr'], cv.COLOR_BGR2GRAY))
             print('Image Quality:')
@@ -149,8 +159,8 @@ if __name__ == '__main__':
         print('==================================================')
     
     if gt_path:
-        avg_psnr = np.mean(list(psnrs.values()))
-        avg_ssim = np.mean(list(ssims.values()))
+        avg_psnr = None if len(psnrs) == 0 else np.mean(list(psnrs.values()))
+        avg_ssim = None if len(ssims) == 0 else np.mean(list(ssims.values()))
         print('Average PSNR:', avg_psnr)
         print('Average SSIM:', avg_ssim)
     
@@ -173,18 +183,27 @@ if __name__ == '__main__':
                 cv.imwrite(os.path.join(output_path, fname_recovered), result['recovered_bgr'])
 
         if gt_path and (save_mode == 2 or save_mode == 3):
-            df = pd.DataFrame({'Speed (one-time measurement)': runtime, 'PSNR': psnrs, 'SSIM': ssims})
-            df.loc['Average'] = [avg_psnr, avg_ssim]
-            df = df.style.apply(highlight_max, subset=['PSNR'], axis=0)\
-                                    .apply(highlight_max, subset=['SSIM'], axis=0)
-            df.to_csv(os.path.join(output_path, FILE_NAME_PERF_REPORT))
+            df = pd.DataFrame({'Speed(s) (one-time measurement)': runtime, 'PSNR': psnrs, 'SSIM': ssims})
+            df.loc['Average'] = [np.mean(list(runtime.values())), avg_psnr, avg_ssim]
+            styled_df = df.style.apply(highlight_max, subset=['PSNR'], axis=0)\
+                                .apply(highlight_min, subset=['PSNR'], axis=0)\
+                                .apply(highlight_max, subset=['SSIM'], axis=0)\
+                                .apply(highlight_min, subset=['SSIM'], axis=0)
+            styled_df.to_html(os.path.join(output_path, FILE_NAME_PERF_REPORT))
 
     # Plot results
+    cnt = 0
+    if len(results) > MAX_DISPLAYED_FIGURE:
+        print(f'Display only {MAX_DISPLAYED_FIGURE}/{len(results)} defoghazing results!')
     for i, result in results.items():
+        if cnt == MAX_DISPLAYED_FIGURE:
+            break
+        
         plot_multiple_images([
             cv.cvtColor(bgr_images[i], cv.COLOR_BGR2RGB),
             cv.cvtColor(result['recovered_bgr'], cv.COLOR_BGR2RGB),
             result['base_tmap'],
             result['refined_tmap']
         ])
-        
+
+        cnt += 1
