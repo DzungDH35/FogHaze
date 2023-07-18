@@ -1,7 +1,11 @@
+import concurrent.futures
 import cv2 as cv
 import math
 import numpy as np
 import utilities.utilities as utils
+import multiprocessing
+import os
+from time import perf_counter
 
 
 DEFAULT_DTYPE = np.float32
@@ -40,23 +44,37 @@ def _atm_light(image_3c: np.ndarray, dark_channel: np.ndarray) -> np.ndarray:
     return atm_light
 
 
-def _improved_atm_light(image_3c: np.ndarray, psi_ps: int, omega_ps: int):
-    height, width, channel = image_3c.shape
-    half_psi_ps = psi_ps // 2
-    padded_image = cv.copyMakeBorder(image_3c, half_psi_ps, half_psi_ps, half_psi_ps, half_psi_ps, cv.BORDER_REPLICATE)
-    omega_kernel = cv.getStructuringElement(cv.MORPH_RECT, (omega_ps, omega_ps))
+def _improved_atm_light(image_3c: np.ndarray, omega_size: int):
+    process = multiprocessing.current_process()
+    print(f'Starting algorithm in process {process}, pid = {os.getpid()}, omega_size = {omega_size}')
+    height, width, _  = image_3c.shape
+    psi_size = omega_size * 4
+    half_psi_size = psi_size // 2
+    is_psi_size_even = psi_size % 2 == 0
 
     atm_light = np.zeros_like(image_3c)
-    psi_patch = None
-    i_min = None
 
-    adjust = 2*half_psi_ps if psi_ps % 2 == 0 else 2*half_psi_ps+1
     for i in range(height):
-        for j in range(width):
-            psi_patch = padded_image[i : i+adjust, j : j+adjust, :]
-            i_min = cv.erode(psi_patch, omega_kernel)
-            atm_light[i, j] = np.max(i_min, axis=(0, 1))
+        i_start = max(i-half_psi_size, 0)
+        i_end = min(i+half_psi_size, height) if is_psi_size_even else min(i+half_psi_size+1, height)
 
+        for j in range(width):
+            eroded = cv.erode(
+                image_3c[
+                    i_start : i_end, 
+                    max(j-half_psi_size, 0) : min(j+half_psi_size, width) if is_psi_size_even else min(j+half_psi_size+1, width), 
+                    :
+                ], 
+                cv.getStructuringElement(cv.MORPH_RECT, (omega_size, omega_size))
+            )
+
+            atm_light[i, j] = np.array([
+                np.max(eroded[:, :, 0]),
+                np.max(eroded[:, :, 1]),
+                np.max(eroded[:, :, 2])
+            ])
+
+    print(f'Finished algorithm in process {process}, pid = {os.getpid()}, ps = {omega_size}')
     return atm_light
 
 
@@ -79,11 +97,17 @@ def defoghaze(
 ) -> dict:
 
     normalized_bgr = utils.minmax_normalize(bgr_image, new_dtype=DEFAULT_DTYPE)
+    height, width, _ = normalized_bgr.shape
     dark_channel = _dark_channel(normalized_bgr, patch_size)
-    atm_light1 = _improved_atm_light(normalized_bgr, 4*18, 18)
-    atm_light2 = _improved_atm_light(normalized_bgr, 4*60, 60)
-    atm_light = (atm_light1 + atm_light2)/2
 
+    min_edge = min(height, width)
+    small_omega_size = max(int(min_edge/100*5), 1)
+    big_omega_size = max(int(min_edge/100*15), 2)
+
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        al_estimation_1 = executor.submit(_improved_atm_light, normalized_bgr, small_omega_size)
+        al_estimation_2 = executor.submit(_improved_atm_light, normalized_bgr, big_omega_size)
+    atm_light = (al_estimation_1.result() + al_estimation_2.result())/2
 
     # Estimate and refine transmission map
     base_tmap = 1 - omega * _dark_channel(normalized_bgr / atm_light, patch_size)
