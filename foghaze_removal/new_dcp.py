@@ -3,9 +3,6 @@ import cv2 as cv
 import math
 import numpy as np
 import utilities.utilities as utils
-import multiprocessing
-import os
-from time import perf_counter
 
 
 DEFAULT_DTYPE = np.float32
@@ -45,8 +42,6 @@ def _atm_light(image_3c: np.ndarray, dark_channel: np.ndarray) -> np.ndarray:
 
 
 def _improved_atm_light(image_3c: np.ndarray, omega_size: int):
-    process = multiprocessing.current_process()
-    print(f'Starting algorithm in process {process}, pid = {os.getpid()}, omega_size = {omega_size}')
     height, width, _  = image_3c.shape
     psi_size = omega_size * 4
     half_psi_size = psi_size // 2
@@ -74,7 +69,6 @@ def _improved_atm_light(image_3c: np.ndarray, omega_size: int):
                 np.max(eroded[:, :, 2])
             ])
 
-    print(f'Finished algorithm in process {process}, pid = {os.getpid()}, ps = {omega_size}')
     return atm_light
 
 
