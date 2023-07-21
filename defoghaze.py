@@ -1,5 +1,5 @@
-from foghaze_removal.dcp import defoghaze as dcp_defoghaze
-from foghaze_removal.improved_dcp import defoghaze as idcp_defoghaze
+from foghaze_removal.iadcp import defoghaze as iadcp_defoghaze
+from foghaze_removal.msialdcp import defoghaze as msialdcp_defoghaze
 from skimage.metrics import peak_signal_noise_ratio as sk_psnr
 from skimage.metrics import structural_similarity as sk_ssim
 from utilities.debug import plot_multiple_images
@@ -44,7 +44,19 @@ DCP_PARSER_CONFIG = {
         'help': 'Epsilon (regularization term of guided filter)'
     }
 }
-IMPROVED_DCP_PARSER_CONFIG = {
+
+IADCP_PARSER_CONFIG = {
+    **DCP_PARSER_CONFIG,
+    'improved_al': {
+        'short': 'ial',
+        'type': int,
+        'required': False,
+        'default': 0,
+        'choices': (0, 1),
+        'help': 'Use improved estimation of atmospheric light (1) or not (0 - default). If not used, this algorithm is the original DCP!'
+    }
+}
+MSIALDCP_PARSER_CONFIG = {
     **DCP_PARSER_CONFIG,
     'fusion_weight': {
         'short': 'fw',
@@ -54,7 +66,7 @@ IMPROVED_DCP_PARSER_CONFIG = {
     }
 }
 
-SUPPORTED_ALGORITHMS = ('dcp', 'improved_dcp')
+SUPPORTED_ALGORITHMS = ('iadcp', 'msialdcp')
 
 RELATIVE_DIR_DFH_RESULT = '/defoghazing_output/'
 FILE_SUFFIX_DARK_CHANNEL = '_dc'
@@ -90,16 +102,17 @@ def add_algorithm_arguments(parser: argparse.ArgumentParser, parser_config: dict
 if __name__ == '__main__':
     print('Supported algorithms:', SUPPORTED_ALGORITHMS)
     algo = input('Select algorithm: ')
+
     if algo not in SUPPORTED_ALGORITHMS:
         raise Exception('Not supported algorithm!')
 
     # Choose defoghazing algorithm for the main program
-    if algo == 'dcp':
-        algo_parser_config = DCP_PARSER_CONFIG
-        defoghaze = dcp_defoghaze
-    elif algo == 'improved_dcp':
-        algo_parser_config = IMPROVED_DCP_PARSER_CONFIG
-        defoghaze = idcp_defoghaze
+    if algo == 'iadcp':
+        algo_parser_config = IADCP_PARSER_CONFIG
+        defoghaze = iadcp_defoghaze
+    elif algo == 'msialdcp':
+        algo_parser_config = MSIALDCP_PARSER_CONFIG
+        defoghaze = msialdcp_defoghaze
 
     # Build arguments for console
     parser = argparse.ArgumentParser()
