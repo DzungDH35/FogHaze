@@ -120,6 +120,7 @@ if __name__ == '__main__':
     parser.add_argument('-gp', '--gt-path', help='Path of corresponding ground-truth image or a directory of corresponding ones used for assessment')
     parser.add_argument('-op', '--output-path', help='Path of a directory to store defoghazing results')
     parser.add_argument('-sm', '--save-mode', type=int, choices=(0, 1, 2, 3), default=3, help='0 - no results are saved, 1 - save only defoghazing results, 2 - save only performance report, 3 - save all results')
+    parser.add_argument('-e', '--extra', type=int, choices=(0, 1), default=0, help='0 - only restored image, 1 - more defoghaze-related results')
     parser.add_argument('-dm', '--display-mode', type=int, choices=(0, 1), default=1, help='0 - no results are displayed, 1 - display defoghazing results within limit (maximum figures)')
     add_algorithm_arguments(parser, algo_parser_config)
 
@@ -137,6 +138,7 @@ if __name__ == '__main__':
     output_path = kwargs.pop('output_path')
     save_mode = kwargs.pop('save_mode')
     display_mode = kwargs.pop('display_mode')
+    extra = kwargs.pop('extra')
 
     # Remaining keys are used to pass to algorithm, and, None value will be removed
     kwargs = {key: value for key, value in kwargs.items() if value is not None}
@@ -187,15 +189,16 @@ if __name__ == '__main__':
         if save_mode == 1 or save_mode == 3:
             for i, result in results.items():
                 fname, ext = os.path.splitext(i)
-                fname_dc = fname + FILE_SUFFIX_DARK_CHANNEL + ext
-                fname_base_tmap = fname + FILE_SUFFIX_BASE_TMAP + ext
-                fname_refined_tmap = fname + FILE_SUFFIX_REFINED_TMAP + ext
                 fname_recovered = fname + FILE_SUFFIX_RECOVERED + ext
-
-                plt.imsave(os.path.join(output_path, fname_dc), result['dark_channel'], cmap='gray')
-                plt.imsave(os.path.join(output_path, fname_base_tmap), result['base_tmap'], cmap='gray')
-                plt.imsave(os.path.join(output_path, fname_refined_tmap), result['refined_tmap'], cmap='gray')
                 cv.imwrite(os.path.join(output_path, fname_recovered), result['recovered_bgr'])
+
+                if extra:
+                    fname_dc = fname + FILE_SUFFIX_DARK_CHANNEL + ext
+                    fname_base_tmap = fname + FILE_SUFFIX_BASE_TMAP + ext
+                    fname_refined_tmap = fname + FILE_SUFFIX_REFINED_TMAP + ext
+                    plt.imsave(os.path.join(output_path, fname_dc), result['dark_channel'], cmap='gray')
+                    plt.imsave(os.path.join(output_path, fname_base_tmap), result['base_tmap'], cmap='gray')
+                    plt.imsave(os.path.join(output_path, fname_refined_tmap), result['refined_tmap'], cmap='gray')
 
         if gt_path and (save_mode == 2 or save_mode == 3):
             df = pd.DataFrame({'Speed(s) (one-time measurement)': runtime, 'PSNR': psnrs, 'SSIM': ssims})
