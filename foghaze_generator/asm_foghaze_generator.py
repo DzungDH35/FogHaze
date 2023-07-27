@@ -10,7 +10,7 @@ HUGE_NUMBER = 999999
 ATM_LIGHT_BOUNDS = (0, 255)                 # 0 <= atmospheric light <= 255
 SCATTERING_COEF_BOUNDS = (0, HUGE_NUMBER)   # 0 <= scattering coefficient <= infinity
 
-ATM_LIGHT_OPMODES = {'naive_int', 'naive_arr'}
+ATM_LIGHT_OPMODES = {'naive_int', 'naive_arr', 'pnoise'}
 SCATTERING_COEF_OPMODES = {'naive_float', 'naive_arr', 'pnoise'}
 
 
@@ -187,6 +187,15 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
 
         return arr_3d
 
+
+    # @private Generate scattering coefficient using Perlin noise.
+    def _gen_perlin_atm_light(self, np_shape: tuple, pnoise_config: dict = {}, range: tuple = None):
+        if range:
+            value_bounds = range
+        else:
+            value_bounds = ATM_LIGHT_BOUNDS
+        return get_perlin_noise(np_shape, pnoise_config, value_bounds)
+
     
     # @private Randomize a value or a numpy array of scattering coefficients.
     def _rand_scattering_coef(self, np_shape: tuple = None, range: tuple = None) -> float | np.ndarray[float]:
@@ -228,15 +237,18 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         
         if atm_light is None or type(atm_light) is tuple:
             bounds = atm_light if atm_light else None
+            opmode = self.operation_mode['atm_light']
 
-            if self.operation_mode['atm_light'] == 'naive_int':
+            if opmode == 'naive_int':
                 atm_light = self._rand_atm_light(range=bounds)
-            else:
+            elif opmode == 'naive_arr':
                 atm_light = self._rand_atm_light(img_shape, bounds)
+            else:
+                atm_light = self._gen_perlin_atm_light(img_shape, self.pnoise_configs[img_idx], bounds)
         
         if scattering_coef is None or type(scattering_coef) is tuple:
             bounds = scattering_coef if scattering_coef else None
-            opmode = self.operation_mode['scattering_coef'] 
+            opmode = self.operation_mode['scattering_coef']
             
             if opmode == 'naive_float':
                 scattering_coef = self._rand_scattering_coef(range=bounds)
