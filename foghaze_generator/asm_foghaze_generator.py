@@ -259,6 +259,11 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         
         normalized_idmap = cv.normalize(inverse_dmap, None, 0, 1.0, cv.NORM_MINMAX, dtype=cv.CV_32F) # scale to [0.0 - 1.0]
         normalized_idmap = 1.0 - normalized_idmap # reverse the inverse depth map
+
+        # penalize pixels with high depth
+        # factor = 2
+        # normalized_idmap = normalized_idmap ** factor
+
         normalized_idmap = cv.cvtColor(normalized_idmap, cv.COLOR_GRAY2RGB)
         
         transmission_map = np.exp(-scattering_coef * normalized_idmap)
