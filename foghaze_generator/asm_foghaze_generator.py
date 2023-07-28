@@ -54,6 +54,8 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         'scattering_coef': 'pnoise'
     }
 
+    penalty_factor: float = 1
+
 
     def __init__(
         self,
@@ -62,7 +64,8 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         inverse_dmaps: list[np.ndarray | str] = [],
         atm_lights: list[int | np.ndarray[int] | tuple[int]] = [],
         betas: list[float | np.ndarray[float] | tuple[float]] = [],
-        pnoise_configs: list[dict] = []
+        pnoise_configs: list[dict] = [],
+        penalty_factor: float = 1
     ):
         super().__init__(images)
 
@@ -74,6 +77,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         self.atm_lights = atm_lights
         self.scattering_coefs = betas
         self.pnoise_configs = pnoise_configs
+        self.penalty_factor = penalty_factor
     
 
     # @override
@@ -261,8 +265,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
         normalized_idmap = 1.0 - normalized_idmap # reverse the inverse depth map
 
         # penalize pixels with high depth
-        # factor = 2
-        # normalized_idmap = normalized_idmap ** factor
+        normalized_idmap = normalized_idmap ** self.penalty_factor
 
         normalized_idmap = cv.cvtColor(normalized_idmap, cv.COLOR_GRAY2RGB)
         

@@ -180,7 +180,7 @@ class InteractiveFHGenerator:
             'scale': pnoise_config.get('scale', 1)
         }
 
-        bottom_offset = 0.3
+        bottom_offset = 0.15
         left_offset = 0.25
         input_width = 0.5
         input_height = 0.05
@@ -190,16 +190,19 @@ class InteractiveFHGenerator:
             tb_pnoise[key] = TextBox(plt.axes([left_offset, bottom_offset, input_width, input_height]), key.capitalize(), initial=value)
             bottom_offset += 0.06
         
-        axis_beta = plt.axes([left_offset, bottom_offset + 0.03, input_width, input_height])
+        axis_penalty_factor = plt.axes([left_offset, bottom_offset + 0.03, input_width, input_height])
+        tb_penalty_factor = TextBox(axis_penalty_factor, 'Penalty Factor', initial=1)
+
+        axis_beta = plt.axes([left_offset, bottom_offset + 0.15, input_width, input_height])
         tb_beta = TextBox(axis_beta, 'Scattering Coefficient', initial=beta)
         axis_beta.text(0, 1.2, f'Valid type: float | tuple[float, float]', color='red')
 
-        axis_A = plt.axes([left_offset, bottom_offset + 0.15, input_width, input_height])
+        axis_A = plt.axes([left_offset, bottom_offset + 0.3, input_width, input_height])
         tb_A = TextBox(axis_A, 'Atmospheric Light', initial=atm_light)
         axis_A.text(0, 1.2, f'Valid type: int | tuple[int, int]', color='red')
 
-        submit_button = PltButton(plt.axes([0.26, 0.1, 0.2, 0.1]), 'Submit')
-        submit_exec_btn = PltButton(plt.axes([0.49, 0.1, 0.2, 0.1]), 'Submit & Execute')
+        submit_button = PltButton(plt.axes([0.26, 0.01, 0.2, 0.1]), 'Submit')
+        submit_exec_btn = PltButton(plt.axes([0.49, 0.01, 0.2, 0.1]), 'Submit & Execute')
 
         def submit_callback(event):
             new_A = literal_eval(tb_A.text) if tb_A.text else None
@@ -214,6 +217,8 @@ class InteractiveFHGenerator:
             for key, textbox in reversed(tb_pnoise.items()):
                 new_pnoise_config[key] = literal_eval(textbox.text)
             self._fh_generator.pnoise_configs = [new_pnoise_config]
+
+            self._fh_generator.penalty_factor = literal_eval(tb_penalty_factor.text) if tb_penalty_factor.text else 1
 
             print('Configure parameters successfully!')
 
