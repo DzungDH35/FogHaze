@@ -51,7 +51,6 @@ IADCP_PARSER_CONFIG = {
         'short': 'ial',
         'type': int,
         'required': False,
-        'default': 0,
         'choices': (0, 1),
         'help': 'Use improved estimation of atmospheric light (1) or not (0 - default). If not used, this algorithm is the original DCP!'
     },
@@ -59,7 +58,6 @@ IADCP_PARSER_CONFIG = {
         'short': 'arf',
         'type': float,
         'required': False,
-        'default': 1,
         'help': 'Resize factor to estimate local atmospheric light faster'
     }
 }
@@ -75,7 +73,6 @@ MSIALDCP_PARSER_CONFIG = {
         'short': 'arf',
         'type': float,
         'required': False,
-        'default': 1,
         'help': 'Resize factor to estimate local atmospheric light faster'
     }
 }
