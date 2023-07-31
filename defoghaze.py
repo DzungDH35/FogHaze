@@ -45,7 +45,8 @@ DCP_PARSER_CONFIG = {
     }
 }
 
-IAL_PARSER_CONFIG = {
+IADCP_PARSER_CONFIG = {
+    **DCP_PARSER_CONFIG,
     'improved_al': {
         'short': 'ial',
         'type': int,
@@ -62,19 +63,20 @@ IAL_PARSER_CONFIG = {
         'help': 'Resize factor to estimate local atmospheric light faster'
     }
 }
-
-IADCP_PARSER_CONFIG = {
-    **DCP_PARSER_CONFIG,
-    **IAL_PARSER_CONFIG
-}
 MSIALDCP_PARSER_CONFIG = {
     **DCP_PARSER_CONFIG,
-    **IAL_PARSER_CONFIG,
     'fusion_weight': {
         'short': 'fw',
         'type': float,
         'required': False,
         'help': 'Fusion weight is used to blend transmission maps obtained from multi-scale analysis'
+    },
+    'al_resize_factor': {
+        'short': 'arf',
+        'type': float,
+        'required': False,
+        'default': 1,
+        'help': 'Resize factor to estimate local atmospheric light faster'
     }
 }
 
