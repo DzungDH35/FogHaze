@@ -146,6 +146,7 @@ if __name__ == '__main__':
     parser.add_argument('-sm', '--save-mode', type=int, choices=(0, 1, 2, 3), default=3, help='0 - no results are saved, 1 - save only defoghazing results, 2 - save only performance report, 3 - save all results')
     parser.add_argument('-e', '--extra', type=int, choices=(0, 1), default=0, help='0 - only restored image, 1 - more defoghaze-related results')
     parser.add_argument('-dm', '--display-mode', type=int, choices=(0, 1), default=1, help='0 - no results are displayed, 1 - display defoghazing results within limit (maximum figures)')
+    parser.add_argument('-pp', '--post-processing', type=int, choices=(0, 1), default=1, help='Post processing or not')
     add_algorithm_arguments(parser, algo_parser_config)
 
     kwargs = vars(parser.parse_args())
@@ -163,6 +164,7 @@ if __name__ == '__main__':
     save_mode = kwargs.pop('save_mode')
     display_mode = kwargs.pop('display_mode')
     extra = kwargs.pop('extra')
+    post_processing = kwargs.pop('post-processing')
 
     # Remaining keys are used to pass to algorithm, and, None value will be removed
     kwargs = {key: value for key, value in kwargs.items() if value is not None}
@@ -181,6 +183,8 @@ if __name__ == '__main__':
         dfh_result = defoghaze(img, **kwargs)
         end= time.perf_counter()
         dfh_result['recovered_bgr'] = utils.minmax_normalize(dfh_result['recovered_bgr'], (0, 1), (0, 255), np.uint8)
+        if post_processing:
+            dfh_result['recovered_bgr'] = cv.fastNlMeansDenoisingColored(dfh_result['recovered_bgr'], hColor=20, h=5)
         results[i] = dfh_result
         
         elapsed_time = end-start
