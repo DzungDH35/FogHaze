@@ -1,4 +1,4 @@
-from foghaze_removal.iadcp import defoghaze as iadcp_defoghaze
+from foghaze_removal.dcp import defoghaze as iadcp_defoghaze
 from foghaze_removal.msialdcp import defoghaze as msialdcp_defoghaze
 from skimage.metrics import peak_signal_noise_ratio as sk_psnr
 from skimage.metrics import structural_similarity as sk_ssim
@@ -45,8 +45,7 @@ DCP_PARSER_CONFIG = {
     }
 }
 
-IADCP_PARSER_CONFIG = {
-    **DCP_PARSER_CONFIG,
+IAL_PARSER_CONFIG = {
     'improved_al': {
         'short': 'ial',
         'type': int,
@@ -54,10 +53,23 @@ IADCP_PARSER_CONFIG = {
         'default': 0,
         'choices': (0, 1),
         'help': 'Use improved estimation of atmospheric light (1) or not (0 - default). If not used, this algorithm is the original DCP!'
+    },
+    'al_resize_factor': {
+        'short': 'arf',
+        'type': float,
+        'required': False,
+        'default': 1,
+        'help': 'Resize factor to estimate local atmospheric light faster'
     }
+}
+
+IADCP_PARSER_CONFIG = {
+    **DCP_PARSER_CONFIG,
+    **IAL_PARSER_CONFIG
 }
 MSIALDCP_PARSER_CONFIG = {
     **DCP_PARSER_CONFIG,
+    **IAL_PARSER_CONFIG,
     'fusion_weight': {
         'short': 'fw',
         'type': float,
