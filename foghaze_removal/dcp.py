@@ -1,3 +1,4 @@
+import concurrent.futures
 import cv2 as cv
 import math
 import numpy as np
@@ -40,6 +41,38 @@ def _atm_light(image_3c: np.ndarray, dark_channel: np.ndarray) -> np.ndarray:
     return atm_light
 
 
+# Improved atmospheric light based on local patch instead of entire image
+def _improved_atm_light(image_3c: np.ndarray, omega_size: int):
+    height, width, _  = image_3c.shape
+    psi_size = omega_size * 4
+    half_psi_size = psi_size // 2
+    is_psi_size_even = psi_size % 2 == 0
+
+    atm_light = np.zeros_like(image_3c)
+
+    for i in range(height):
+        i_start = max(i-half_psi_size, 0)
+        i_end = min(i+half_psi_size, height) if is_psi_size_even else min(i+half_psi_size+1, height)
+
+        for j in range(width):
+            eroded = cv.erode(
+                image_3c[
+                    i_start : i_end,
+                    max(j-half_psi_size, 0) : min(j+half_psi_size, width) if is_psi_size_even else min(j+half_psi_size+1, width), 
+                    :
+                ],
+                cv.getStructuringElement(cv.MORPH_RECT, (omega_size, omega_size))
+            )
+
+            atm_light[i, j] = np.array([
+                np.max(eroded[:, :, 0]),
+                np.max(eroded[:, :, 1]),
+                np.max(eroded[:, :, 2])
+            ])
+
+    return atm_light
+
+
 # Refine transmission map using guided image filter
 def _refined_tmap(bgr_image: np.ndarray, base_tmap: np.ndarray, radius: int, epsilon: float) -> np.ndarray:
     # Ensure dtype "float32" to be compatible with cv.ximgproc.guidedFilter()
@@ -55,12 +88,30 @@ def defoghaze(
     omega: float = DEFAULT_OMEGA,   # control small amount of haze at distant objects
     t0: float = DEFAULT_T0,         # control lower bound of transmission map
     radius = DEFAULT_RADIUS,        # radius of guided filter
-    epsilon = DEFAULT_EPS           # regularization term of guided filter
-) -> dict:
+    epsilon = DEFAULT_EPS,          # regularization term of guided filter
+    improved_al = False,            # use improved estimation of atmospheric light or not
+    al_resize_factor = 1            # factor to resize map of improved local atmospheric light (should provide, if factor = 1, will estimate over entire image which is too expensive right now because of not optimized)
+ ) -> dict:
     
     normalized_bgr = utils.minmax_normalize(bgr_image, new_dtype=DEFAULT_DTYPE)
+
     dark_channel = _dark_channel(normalized_bgr, patch_size)
-    atm_light = _atm_light(normalized_bgr, dark_channel)
+
+    if improved_al:
+        resized_bgr = cv.resize(normalized_bgr, dsize=None, fx=al_resize_factor, fy=al_resize_factor, interpolation=cv.INTER_AREA)
+
+        min_edge = min(resized_bgr.shape[0], resized_bgr.shape[1])
+        small_omega_size = max(int(min_edge/100*5), 1)
+        big_omega_size = max(int(min_edge/100*15), 2)
+
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            al_estimation_1 = executor.submit(_improved_atm_light, resized_bgr, small_omega_size)
+            al_estimation_2 = executor.submit(_improved_atm_light, resized_bgr, big_omega_size)
+
+        atm_light = (al_estimation_1.result() + al_estimation_2.result())/2
+        atm_light = cv.resize(atm_light, dsize=(normalized_bgr.shape[1], normalized_bgr.shape[0]), interpolation=cv.INTER_CUBIC)
+    else:
+        atm_light = _atm_light(normalized_bgr, dark_channel)
 
     # Estimate and refine transmission map
     base_tmap = 1 - omega * _dark_channel(normalized_bgr / atm_light, patch_size)
