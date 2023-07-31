@@ -50,7 +50,7 @@ class ASMFogHazeGenerator(BaseFogHazeGenerator):
     _pnoise_configs: list[dict]
 
     operation_mode = {
-        'atm_light': 'naive_int',
+        'atm_light': 'pnoise',
         'scattering_coef': 'pnoise'
     }
 
