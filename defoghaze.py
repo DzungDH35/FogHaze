@@ -164,7 +164,7 @@ if __name__ == '__main__':
     save_mode = kwargs.pop('save_mode')
     display_mode = kwargs.pop('display_mode')
     extra = kwargs.pop('extra')
-    post_processing = kwargs.pop('post-processing')
+    post_processing = kwargs.pop('post_processing')
 
     # Remaining keys are used to pass to algorithm, and, None value will be removed
     kwargs = {key: value for key, value in kwargs.items() if value is not None}
