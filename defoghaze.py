@@ -110,6 +110,23 @@ def highlight_min(s):
     is_min['Average'] = False
     return ['color: #ff0000' if v else '' for v in is_min]
 
+def white_balance(image):
+    image_float = image.astype(np.float32) / 255.0
+
+    # Calculate the average color of the image
+    avg_color = np.mean(image_float, axis=(0, 1))
+
+    # Compute the scaling factors for each color channel
+    gray_world = np.mean(avg_color)
+    scaling_factors = gray_world / avg_color
+
+    # Apply the scaling factors to each color channel
+    balanced_image_float = image_float * scaling_factors
+    
+    balanced_image_float = np.clip(balanced_image_float, 0, 1)
+
+    return (balanced_image_float * 255).astype(np.uint8)
+
 
 def add_algorithm_arguments(parser: argparse.ArgumentParser, parser_config: dict):
     for arg_key, config in parser_config.items():
@@ -184,6 +201,7 @@ if __name__ == '__main__':
         end= time.perf_counter()
         dfh_result['recovered_bgr'] = utils.minmax_normalize(dfh_result['recovered_bgr'], (0, 1), (0, 255), np.uint8)
         if post_processing:
+            dfh_result['recovered_bgr'] = white_balance(dfh_result['recovered_bgr'])
             dfh_result['recovered_bgr'] = cv.fastNlMeansDenoisingColored(dfh_result['recovered_bgr'], hColor=20, h=5)
         results[i] = dfh_result
         
