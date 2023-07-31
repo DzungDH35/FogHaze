@@ -1,4 +1,5 @@
 from foghaze_removal.dcp import defoghaze as iadcp_defoghaze
+from foghaze_removal.msdcp import defoghaze as msdcp_defoghaze
 from foghaze_removal.msialdcp import defoghaze as msialdcp_defoghaze
 from skimage.metrics import peak_signal_noise_ratio as sk_psnr
 from skimage.metrics import structural_similarity as sk_ssim
@@ -58,7 +59,16 @@ IADCP_PARSER_CONFIG = {
         'short': 'arf',
         'type': float,
         'required': False,
-        'help': 'Resize factor to estimate local atmospheric light faster'
+        'help': 'Resize factor to estimate local atmospheric light faster (only affect when improved_al=True)'
+    }
+}
+MSDCP_PARSER_CONFIG = {
+    **DCP_PARSER_CONFIG,
+    'fusion_weight': {
+        'short': 'fw',
+        'type': float,
+        'required': False,
+        'help': 'Fusion weight is used to blend transmission maps obtained from multi-scale analysis'
     }
 }
 MSIALDCP_PARSER_CONFIG = {
@@ -77,7 +87,7 @@ MSIALDCP_PARSER_CONFIG = {
     }
 }
 
-SUPPORTED_ALGORITHMS = ('iadcp', 'msialdcp')
+SUPPORTED_ALGORITHMS = ('iadcp', 'msdcp', 'msialdcp')
 
 RELATIVE_DIR_DFH_RESULT = '/defoghazing_output/'
 FILE_SUFFIX_DARK_CHANNEL = '_dc'
@@ -121,6 +131,9 @@ if __name__ == '__main__':
     if algo == 'iadcp':
         algo_parser_config = IADCP_PARSER_CONFIG
         defoghaze = iadcp_defoghaze
+    elif algo == 'msdcp':
+        algo_parser_config = MSDCP_PARSER_CONFIG
+        defoghaze = msdcp_defoghaze
     elif algo == 'msialdcp':
         algo_parser_config = MSIALDCP_PARSER_CONFIG
         defoghaze = msialdcp_defoghaze
