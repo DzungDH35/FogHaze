@@ -19,7 +19,7 @@ DCP_PARSER_CONFIG = {
         'short': 'ps',
         'type': int,
         'required': False,
-        'help': 'Path of a foggy/hazy image(s) or a directory of ones to be processed'
+        'help': 'Patch used to construct dark channel'
     },
     'omega': {
         'short': 'om',
