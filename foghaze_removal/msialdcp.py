@@ -108,6 +108,7 @@ def defoghaze(
 
     # Use improved atmospheric light by estimating locally
     resized_bgr = cv.resize(normalized_bgr, dsize=None, fx=al_resize_factor, fy=al_resize_factor, interpolation=cv.INTER_AREA)
+    print('Resized for AL:', resized_bgr.shape)
     min_edge = min(resized_bgr.shape[0], resized_bgr.shape[1])
     small_omega_size = max(int(min_edge/100*5), 1)
     big_omega_size = max(int(min_edge/100*15), 2)
