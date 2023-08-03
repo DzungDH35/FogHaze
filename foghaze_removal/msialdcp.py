@@ -46,7 +46,7 @@ def _atm_light(image_3c: np.ndarray, dark_channel: np.ndarray) -> np.ndarray:
 # Improved atmospheric light based on local patch instead of entire image
 def _improved_atm_light(image_3c: np.ndarray, omega_size: int):
     height, width, _  = image_3c.shape
-    psi_size = omega_size * 4
+    psi_size = omega_size * 2
     half_psi_size = psi_size // 2
     is_psi_size_even = psi_size % 2 == 0
 
