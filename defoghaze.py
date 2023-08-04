@@ -1,4 +1,4 @@
-from foghaze_removal.dcp import defoghaze as iadcp_defoghaze
+from foghaze_removal.dcp import defoghaze as dcp_defoghaze
 from foghaze_removal.msdcp import defoghaze as msdcp_defoghaze
 from foghaze_removal.msialdcp import defoghaze as msialdcp_defoghaze
 from skimage.metrics import peak_signal_noise_ratio as sk_psnr
@@ -87,7 +87,7 @@ MSIALDCP_PARSER_CONFIG = {
     }
 }
 
-SUPPORTED_ALGORITHMS = ('iadcp', 'msdcp', 'msialdcp')
+SUPPORTED_ALGORITHMS = ('dcp', 'msdcp', 'msialdcp')
 
 RELATIVE_DIR_DFH_RESULT = '/defoghazing_output/'
 FILE_SUFFIX_DARK_CHANNEL = '_dc'
@@ -145,9 +145,9 @@ if __name__ == '__main__':
         raise Exception('Not supported algorithm!')
 
     # Choose defoghazing algorithm for the main program
-    if algo == 'iadcp':
+    if algo == 'dcp':
         algo_parser_config = IADCP_PARSER_CONFIG
-        defoghaze = iadcp_defoghaze
+        defoghaze = dcp_defoghaze
     elif algo == 'msdcp':
         algo_parser_config = MSDCP_PARSER_CONFIG
         defoghaze = msdcp_defoghaze
