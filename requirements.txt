@@ -1,15 +1,13 @@
 aiohttp-requests
 asyncio
 fastapi
-keras
 matplotlib
 numpy
-opencv-python
+opencv-contrib-python
 Pillow
 protobuf
 python-multipart
 scipy
 six
 starlette
-tensorflow
 uvicorn
