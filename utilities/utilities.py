@@ -34,7 +34,7 @@ color_mode is BGR (default) or RGB or gray.
 If index = True, a dict indexed with filename.ext will be returned, otherwise, a list returned.
 If a list is returned, it is the result of images read in alphabetical order.
 """
-def read_images_from_path(path: str, color_mode='BGR', index: bool = True) -> dict|list:
+def read_images_from_path(path: str, color_mode='BGR', index: bool = True):
     file_names = []
     images = []
     cv_imread_mode = cv.IMREAD_GRAYSCALE if color_mode == 'gray' else cv.IMREAD_COLOR
