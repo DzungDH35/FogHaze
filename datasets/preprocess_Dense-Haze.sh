@@ -5,10 +5,12 @@ This file is used to partition files into GT and hazy folder pairs,
 each folder contains up to FILE_BATCH_SIZE files (for example FILE_BATCH_SIZE = 20).
 '
 
-readonly DATASET_DIR="./NH-HAZE"
+readonly DATASET_DIR="./Dense_Haze"
 readonly FILE_BATCH_SIZE=20
 
 cd "$DATASET_DIR" || exit 1
+mv ./GT/* ./ && rmdir ./GT
+mv ./hazy/* ./ && rmdir ./hazy
 echo "Start processing $DATASET_DIR..."
 
 hazy_files=()
