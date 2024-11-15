@@ -7,12 +7,10 @@ each folder contains up to FILE_BATCH_SIZE files (for example FILE_BATCH_SIZE = 
 NOTE: Only run it to preprocess the dataset fetch from the original paper/repo
 '
 
-readonly DATASET_DIR="./Dense_Haze"
+readonly DATASET_DIR="./NH-HAZE"
 readonly FILE_BATCH_SIZE=20
 
 cd "$DATASET_DIR" || exit 1
-mv ./GT/* ./ && rmdir ./GT
-mv ./hazy/* ./ && rmdir ./hazy
 echo "Start processing $DATASET_DIR..."
 
 hazy_files=()

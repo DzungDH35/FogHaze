@@ -3,9 +3,11 @@
 : '
 This file is used to partition files into GT and hazy folder pairs, 
 each folder contains up to FILE_BATCH_SIZE files (for example FILE_BATCH_SIZE = 20).
+
+NOTE: Only run it to preprocess the dataset fetch from the original paper/repo
 '
 
-readonly DATASET_DIR="./NH-HAZE"
+readonly DATASET_DIR="./O-HAZE"
 readonly FILE_BATCH_SIZE=20
 
 cd "$DATASET_DIR" || exit 1
