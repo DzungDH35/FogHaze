@@ -13,20 +13,28 @@ readonly FILE_BATCH_SIZE=20
 cd "$DATASET_DIR" || exit 1
 echo "Start processing $DATASET_DIR..."
 
-# rename_files_in_ascending_order() {
-#     current_dir=$(pwd)
-#     target_dir="${1:-$(pwd)}"
-    
-#     cd "$target_dir" || return 1
+paritition_files_into_dirs() {
+    current_dir=$(pwd)
+    target_dir="${1:-$(pwd)}"
 
-#     counter=1
-#     for file in *; do
-#         mv "$file" "$counter.${file##*.}"
-#         ((counter++))
-#     done
+    cd "$target_dir" || return 1
 
-#     cd "$current_dir" || return 1
-# }
+    dir_index=1
+    file_count=0
+
+    for file in *; do
+        mkdir -p "$dir_index"
+        mv "$file" "$dir_index/"
+
+        ((file_count++))
+
+        if ((file_count % FILE_BATCH_SIZE == 0)); then
+            ((dir_index++))
+        fi
+    done
+
+    cd "$current_dir" || return 1
+}
 
 partition_indoor_hazy_files() {
     cd "./hazy" || return 1
@@ -35,16 +43,16 @@ partition_indoor_hazy_files() {
         filename=$(basename "$file")
         filename="${filename%.*}"
         suffix=${filename#*_}
-        mkdir -p "degree_$suffix"
-        mv "$file" "degree_$suffix/"
+
+        degree_dir="degree_$suffix"
+        new_file=$(echo "$file" | cut -d'_' -f1).${file##*.}
+
+        mkdir -p "$degree_dir"
+        mv "$file" "$degree_dir/$new_file"
     done
 
-    dir_index=1
-    for ((i=0; i<num_file_pairs; ++i)); do
-        mv "${gt_files[$i]}" "./GT_$dir_index/$((i+1)).${gt_files[$i]##*.}"
-        mv "${hazy_files[$i]}" "./hazy_$dir_index/$((i+1)).${hazy_files[$i]##*.}"
-
-        (( (i+1) % FILE_BATCH_SIZE == 0 )) && ((dir_index++))
+    for degree_dir in *; do
+        paritition_files_into_dirs "$degree_dir"
     done
 
     cd ".." || return 1
@@ -58,10 +66,13 @@ partition_outdoor_hazy_files() {
 
         if [ -e "$new_name" ]; then
             rm "$file"
+            echo "Remove duplicate file $file"
         else
             mv "$file" "$new_name"
         fi
     done
+
+    paritition_files_into_dirs "."
 
     cd ".." || return 1
 }
@@ -69,10 +80,11 @@ partition_outdoor_hazy_files() {
 # Preprocess indoor dataset
 cd ./indoor || exit
 mv "./gt" "./GT"
+paritition_files_into_dirs "./GT"
 partition_indoor_hazy_files
 
 # Preprocess outdoor dataset
-# cd ./outdoor || exit
-# mv "./gt" "./GT"
-# rename_files_in_ascending_order GT
-# partition_outdoor_hazy_files
+cd ../outdoor || exit
+mv "./gt" "./GT"
+paritition_files_into_dirs "./GT"
+partition_outdoor_hazy_files
