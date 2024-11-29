@@ -16,6 +16,7 @@ echo "Start processing $DATASET_DIR..."
 paritition_files_into_dirs() {
     current_dir=$(pwd)
     target_dir="${1:-$(pwd)}"
+    local dir_prefix=$2
 
     cd "$target_dir" || return 1
 
@@ -23,8 +24,8 @@ paritition_files_into_dirs() {
     file_count=0
 
     for file in *; do
-        mkdir -p "$dir_index"
-        mv "$file" "$dir_index/"
+        mkdir -p "${dir_prefix}_${dir_index}"
+        mv "$file" "${dir_prefix}_${dir_index}/"
 
         ((file_count++))
 
@@ -52,7 +53,7 @@ partition_indoor_hazy_files() {
     done
 
     for degree_dir in *; do
-        paritition_files_into_dirs "$degree_dir"
+        paritition_files_into_dirs "$degree_dir" "hazy"
     done
 
     cd ".." || return 1
@@ -72,7 +73,7 @@ partition_outdoor_hazy_files() {
         fi
     done
 
-    paritition_files_into_dirs "."
+    paritition_files_into_dirs "." "hazy"
 
     cd ".." || return 1
 }
@@ -80,11 +81,14 @@ partition_outdoor_hazy_files() {
 # Preprocess indoor dataset
 cd ./indoor || exit
 mv "./gt" "./GT"
-paritition_files_into_dirs "./GT"
+paritition_files_into_dirs "./GT" "GT"
 partition_indoor_hazy_files
+mv ./GT/* ./ && rmdir ./GT
 
 # Preprocess outdoor dataset
 cd ../outdoor || exit
 mv "./gt" "./GT"
-paritition_files_into_dirs "./GT"
+paritition_files_into_dirs "./GT" "GT"
 partition_outdoor_hazy_files
+mv ./GT/* ./ && rmdir ./GT
+mv ./hazy/* ./ && rmdir ./hazy

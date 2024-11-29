@@ -13,22 +13,6 @@ readonly FILE_BATCH_SIZE=20
 cd "$DATASET_DIR" || exit 1
 echo "Start processing $DATASET_DIR..."
 
-hazy_files=()
-gt_files=()
-
-for file in *; do
-    if [[ -f "$file" ]]; then
-        if [[ "$file" == *hazy* ]]; then
-            hazy_files+=("$file")
-        elif [[ "$file" == *GT* ]]; then
-            gt_files+=("$file")
-        fi
-    fi
-done
-
-[ ${#hazy_files[@]} -ne ${#gt_files[@]} ] && { echo "Error: The number of hazy files does not match the number of GT files."; exit 1; }
-num_file_pairs=${#hazy_files[@]}
-
 create_dir_pairs() {
     num_dirs=$(( ($num_file_pairs + $FILE_BATCH_SIZE - 1) / $FILE_BATCH_SIZE ))
 
@@ -49,6 +33,26 @@ partition_files() {
         (( (i+1) % FILE_BATCH_SIZE == 0 )) && ((dir_index++))
     done
 }
+
+mv "./# O-HAZY NTIRE 2018/"* ./ && rm -rf "./# O-HAZY NTIRE 2018"
+mv ./GT/* ./ && rm -rf ./GT
+mv ./hazy/* ./ && rm -rf ./hazy
+
+hazy_files=()
+gt_files=()
+
+for file in *; do
+    if [[ -f "$file" ]]; then
+        if [[ "$file" == *hazy* ]]; then
+            hazy_files+=("$file")
+        elif [[ "$file" == *GT* ]]; then
+            gt_files+=("$file")
+        fi
+    fi
+done
+
+[ ${#hazy_files[@]} -ne ${#gt_files[@]} ] && { echo "Error: The number of hazy files does not match the number of GT files."; exit 1; }
+num_file_pairs=${#hazy_files[@]}
 
 create_dir_pairs
 partition_files
