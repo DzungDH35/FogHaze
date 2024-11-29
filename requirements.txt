@@ -4,9 +4,12 @@ fastapi
 matplotlib
 numpy
 opencv-contrib-python
+Jinja2
 Pillow
+pandas
 protobuf
 python-multipart
+scikit-image
 scipy
 six
 starlette

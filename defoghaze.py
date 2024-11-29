@@ -140,6 +140,7 @@ def add_algorithm_arguments(parser: argparse.ArgumentParser, parser_config: dict
 if __name__ == '__main__':
     print('Supported algorithms:', SUPPORTED_ALGORITHMS)
     algo = input('Select algorithm: ')
+    print(algo)
 
     if algo not in SUPPORTED_ALGORITHMS:
         raise Exception('Not supported algorithm!')
