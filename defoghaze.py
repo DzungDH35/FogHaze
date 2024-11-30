@@ -94,7 +94,7 @@ FILE_SUFFIX_DARK_CHANNEL = '_dc'
 FILE_SUFFIX_BASE_TMAP = '_base_tmap'
 FILE_SUFFIX_REFINED_TMAP = '_refined_tmap'
 FILE_SUFFIX_RECOVERED = '_recovered'
-FILE_NAME_PERF_REPORT = 'performance_report.html'
+FILE_NAME_PERF_REPORT = 'performance_report'
 
 MAX_DISPLAYED_FIGURES = 3
 
@@ -136,6 +136,38 @@ def add_algorithm_arguments(parser: argparse.ArgumentParser, parser_config: dict
             **config
         )
 
+def save_performance_report(df, output_path):
+    performance_report_file = f"{os.path.join(output_path, FILE_NAME_PERF_REPORT)}.html"
+
+    if not os.path.exists(performance_report_file):
+        df.loc['Average'] = [
+            np.mean(df['Speed(s) (one-time measurement)']), 
+            np.mean(df['PSNR']), 
+            np.mean(df['SSIM'])
+        ]
+
+        styled_df = df.style.apply(highlight_max, subset=['PSNR'], axis=0)\
+                            .apply(highlight_min, subset=['PSNR'], axis=0)\
+                            .apply(highlight_max, subset=['SSIM'], axis=0)\
+                            .apply(highlight_min, subset=['SSIM'], axis=0)
+        
+        return styled_df.to_html(performance_report_file)
+    
+    old_df = pd.read_html(performance_report_file, index_col=0)[0].iloc[:-1]
+
+    df = pd.concat([old_df, df])
+    df.loc['Average'] = [
+        np.mean(df['Speed(s) (one-time measurement)']), 
+        np.mean(df['PSNR']), 
+        np.mean(df['SSIM'])
+    ]
+
+    styled_df = df.style.apply(highlight_max, subset=['PSNR'], axis=0)\
+                        .apply(highlight_min, subset=['PSNR'], axis=0)\
+                        .apply(highlight_max, subset=['SSIM'], axis=0)\
+                        .apply(highlight_min, subset=['SSIM'], axis=0)
+
+    return styled_df.to_html(performance_report_file)
 
 if __name__ == '__main__':
     print('Supported algorithms:', SUPPORTED_ALGORITHMS)
@@ -249,12 +281,7 @@ if __name__ == '__main__':
 
         if gt_path and (save_mode == 2 or save_mode == 3):
             df = pd.DataFrame({'Speed(s) (one-time measurement)': runtime, 'PSNR': psnrs, 'SSIM': ssims})
-            df.loc['Average'] = [np.mean(list(runtime.values())), avg_psnr, avg_ssim]
-            styled_df = df.style.apply(highlight_max, subset=['PSNR'], axis=0)\
-                                .apply(highlight_min, subset=['PSNR'], axis=0)\
-                                .apply(highlight_max, subset=['SSIM'], axis=0)\
-                                .apply(highlight_min, subset=['SSIM'], axis=0)
-            styled_df.to_html(os.path.join(output_path, FILE_NAME_PERF_REPORT))
+            save_performance_report(df, output_path)
 
     # Plot results
     if display_mode == 1:

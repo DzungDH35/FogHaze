@@ -1,12 +1,13 @@
 aiohttp-requests
 asyncio
 fastapi
+Jinja2
+lxml
 matplotlib
 numpy
 opencv-contrib-python
-Jinja2
-Pillow
 pandas
+Pillow
 protobuf
 python-multipart
 scikit-image
