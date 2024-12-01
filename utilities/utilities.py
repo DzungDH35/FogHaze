@@ -45,7 +45,7 @@ def read_images_from_path(path: str, color_mode='BGR', index: bool = True):
         if img is None:
             raise Exception(f'Image path "{path}" cannot be read!')
         
-        file_names.append(os.path.basename(path))
+        file_names.append(os.path.splitext(os.path.basename(path))[0])
         images.append(cv.imread(path))
     elif os.path.isdir(path):
         for file_name in sorted(os.listdir(path)):
@@ -56,7 +56,7 @@ def read_images_from_path(path: str, color_mode='BGR', index: bool = True):
                 if img is None:
                     raise Exception(f'Image path "{path}" cannot be read!')
                 
-                file_names.append(file_name)
+                file_names.append(os.path.splitext(file_name)[0])
                 images.append(img)
     else:
         raise Exception(f'Path "{path}" is not found in file system!')
