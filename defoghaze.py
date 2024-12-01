@@ -268,7 +268,8 @@ if __name__ == '__main__':
         if save_mode == 1 or save_mode == 3:
             for i, result in results.items():
                 fname, ext = os.path.splitext(i)
-                fname_recovered = fname + FILE_SUFFIX_RECOVERED + ext
+                fname_recovered = fname + FILE_SUFFIX_RECOVERED + '.jpg'
+
                 cv.imwrite(os.path.join(output_path, fname_recovered), result['recovered_bgr'])
 
                 if extra:
